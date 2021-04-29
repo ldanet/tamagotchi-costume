@@ -1,0 +1,151 @@
+body {
+  display: flex;
+  justify-content: center;
+  font-family: 'VT323', monospace;
+  background-image: url(img/tamabg.jpg);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
+  position: fixed;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  cursor: none !important;
+}
+
+#finger {
+  z-index: 100;
+  position: absolute;
+  pointer-events: none;
+}
+
+.game {
+  position: relative;
+  padding-top: 60px;
+}
+
+.game__body {
+  position: relative;
+  width: 800px;
+}
+
+.controls {
+  position: absolute;
+  top: 448px;
+  left: 301px;
+}
+
+.controls__button {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+.controls__button:nth-child(2) {
+  top: 19px;
+  left: 72px;
+}
+
+.controls__button:nth-child(3) {
+  left: 142px
+}
+
+.game__screen {
+  position: absolute;
+  top: 189px;
+  left: 286px;
+  width: 228px;
+  height: 234px;
+  border-radius: 11px;
+}
+
+.game__screen canvas {
+  position: absolute;
+  top: 40px;
+  left: 38px;
+}
+
+.tama_options {
+  display: none;
+  position: absolute;
+}
+.tama_options > div {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  opacity: 0.2;
+  background-size: contain;
+}
+.tama_options .tama_options_active {
+  opacity: 1;
+}
+.to_top    { top:    2px; }
+.to_bottom { top:  199px; }
+.to_col1   { left:   8px; }
+.to_col2   { left:  54px; }
+.to_col3   { left:  99px; }
+.to_col4   { left: 144px; }
+.to_col5   { left: 189px; }
+
+#tama_options_stats      { background-image: url("img/icons/stats.png");      }
+#tama_options_food       { background-image: url("img/icons/food.png");       }
+#tama_options_toilet     { background-image: url("img/icons/toilet.png");     }
+#tama_options_games      { background-image: url("img/icons/games.png");      }
+#tama_options_connect    { background-image: url("img/icons/connect.png");    }
+#tama_options_discipline { background-image: url("img/icons/discipline.png"); }
+#tama_options_medicine   { background-image: url("img/icons/medicine.png");   }
+#tama_options_lights     { background-image: url("img/icons/lights.png");     }
+#tama_options_guestbook  { background-image: url("img/icons/guestbook.png");  }
+#tama_options_attention  { background-image: url("img/icons/attention.png");  }
+
+.game__options {
+  display: none;
+  position: absolute;
+  width: 228px;
+  height: 234px;
+  border: 1px dotted #000;
+  border-radius: 16px;
+}
+
+.game__options.visible {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.game__options > div {
+  color: #666;
+  font-family: 'VT323';
+  font-size: 80px;
+}
+
+.game__options > div:hover {
+  color: #444;
+}
+
+.game__options > div:hover:before {
+  content: '>';
+}
+
+.background {
+  width: 100%;
+  height: 100%;
+}
+
+.animation {
+  bottom: 4%;
+}
+
+#debug {
+  display: none;
+  background-color: #000;
+  color: #FFF;
+  border: 1px solid #FFF;
+  position: fixed;
+  font-size: 20px;
+  padding: 10px;
+  top: 0;
+  left: 0;
+}
