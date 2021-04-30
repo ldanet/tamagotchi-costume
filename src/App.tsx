@@ -12,7 +12,13 @@ import attentionIcon from "./icons/attention.png";
 import gridOverlay from "./grid-overlay.png";
 
 import "./App.css";
-import { clear, fill, useAnimationLoop } from "./animations/animate";
+import {
+  animate,
+  clear,
+  drawFrame,
+  fill,
+  useAnimationLoop,
+} from "./animations/animate";
 import {
   foodAnimation,
   FoodOption,
@@ -36,22 +42,33 @@ const options = [
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
+
+  // General
   const [busy, setBusy] = useState(false);
-  const [lightsOff, setlightsOff] = useState(false);
   const [mode, setMode] = useState<Mode>("idle");
   const [activeOption, setActiveOption] = useState<number>(0);
-  const [needsAttention, setNeedsAttention] = useState<boolean>(false);
-  const [animationLoop, setAnimationLoop] = useState(idleAnimation);
-
-  const [foodOption, setFoodOption] = useState<FoodOption>("meal");
 
   const activeIcon = options[activeOption];
+
+  // Needs and health
+  const [needsAttention, setNeedsAttention] = useState<boolean>(false);
+
+  // Lights
+  const [lightsOff, setlightsOff] = useState(false);
+
+  // Food
+  const [foodOption, setFoodOption] = useState<FoodOption>("meal");
+
+  // Animation
+  const [animationLoop, setAnimationLoop] = useState(idleAnimation);
+  const [pauseLoop, setPauseLoop] = useState(false);
 
   const { setAnimation } = useAnimationLoop(
     ctx.current,
     animationLoop,
     lightsOff,
-    setBusy
+    setBusy,
+    pauseLoop
   );
 
   useEffect(() => {
@@ -69,12 +86,15 @@ function App() {
         break;
       }
       case "food": {
-        const newOption: FoodOption = foodOption === "meal" ? "snack" : "meal";
-        setFoodOption(newOption);
-        setAnimationLoop([foodScreen(newOption)]);
+        if (!lightsOff) {
+          const newOption: FoodOption =
+            foodOption === "meal" ? "snack" : "meal";
+          setFoodOption(newOption);
+          drawFrame(ctx.current, foodScreen(newOption), lightsOff);
+        }
       }
     }
-  }, [mode, busy, foodOption, setAnimationLoop]);
+  }, [mode, busy, foodOption, lightsOff]);
 
   const handleB = useCallback(async () => {
     if (busy) return;
@@ -83,8 +103,9 @@ function App() {
         if (activeIcon === "food" && !lightsOff) {
           setFoodOption("meal");
           setMode("food");
+          setPauseLoop(true);
           setAnimation([]);
-          setAnimationLoop([foodScreen(foodOption)]);
+          drawFrame(ctx.current, foodScreen("meal"), lightsOff);
         }
         if (activeIcon === "light") {
           if (!ctx.current) return;
@@ -95,7 +116,9 @@ function App() {
       }
       case "food": {
         setBusy(true);
-        setAnimation(foodAnimation(foodOption));
+        await animate(ctx.current, foodAnimation(foodOption), lightsOff);
+        setBusy(false);
+        drawFrame(ctx.current, foodScreen("meal"), lightsOff);
       }
     }
   }, [mode, activeIcon, busy, lightsOff, setAnimation, foodOption]);
@@ -105,6 +128,7 @@ function App() {
     setAnimation([]);
     setAnimationLoop(idleAnimation);
     setMode("idle");
+    setPauseLoop(false);
   }, [busy, setAnimation, mode]);
 
   return (
