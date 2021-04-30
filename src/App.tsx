@@ -1,7 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import * as d3 from "d3-timer";
-import Egg from "./animations/Egg";
-import Tamagotchi from "./animations/Tamagotchi";
 
 import foodIcon from "./icons/food.png";
 import lightIcon from "./icons/light.png";
@@ -12,7 +9,11 @@ import statusIcon from "./icons/status.png";
 import disciplineIcon from "./icons/discipline.png";
 import attentionIcon from "./icons/attention.png";
 
+import gridOverlay from "./grid-overlay.png";
+
 import "./App.css";
+import { animate, clear, fill } from "./animations/animate";
+import { foodAnimation } from "./animations/animations";
 
 type Mode = "idle" | "food" | "light" | "status";
 
@@ -29,44 +30,45 @@ const options = [
 
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const egg = useRef<Egg | null>(null);
-  const tamagotchi = useRef<Tamagotchi | null>(null);
+  const context = useRef<CanvasRenderingContext2D | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [lightsOff, setlightsOff] = useState(false);
   const [mode, setMode] = useState<Mode>("idle");
   const [activeOption, setActiveOption] = useState<number>(0);
   const [needsAttention, setNeedsAttention] = useState<boolean>(false);
-  console.log("activeOption: ", activeOption);
 
   const activeIcon = options[activeOption];
   console.log("activeIcon: ", activeIcon);
 
   useEffect(() => {
     if (canvas.current) {
-      egg.current = new Egg(canvas.current);
-      tamagotchi.current = new Tamagotchi(canvas.current);
+      context.current = canvas.current.getContext("2d");
+      if (context.current) context.current.imageSmoothingEnabled = false;
     }
-  });
+  }, []);
 
   const handleA = useCallback(() => {
+    if (busy) return;
     if (mode === "idle") {
       setActiveOption((curr) => (curr + 1) % options.length);
     }
-  }, [mode]);
+  }, [mode, busy]);
 
-  const handleB = useCallback(() => {
+  const handleB = useCallback(async () => {
+    if (busy) return;
     if (mode === "idle") {
-      if (activeIcon === "food") {
-        console.log("Food!", tamagotchi.current);
-        const feed = tamagotchi.current?.feed("meal");
-        const t = d3.timer((elapsed) => {
-          if (elapsed > 170) {
-            t.stop();
-            return;
-          }
-          feed?.next();
-        }, 40);
+      if (activeIcon === "food" && !lightsOff) {
+        setBusy(true);
+        await animate(context.current, foodAnimation("meal"), lightsOff);
+        setBusy(false);
+      }
+      if (activeIcon === "light") {
+        if (!context.current) return;
+        lightsOff ? clear(context.current) : fill(context.current);
+        setlightsOff((current) => !current);
       }
     }
-  }, [mode, activeIcon]);
+  }, [mode, activeIcon, busy, lightsOff]);
 
   return (
     <div className="App">
@@ -89,7 +91,8 @@ function App() {
             style={{ backgroundImage: `url("${medicineIcon}")` }}
           />
         </div>
-        <canvas ref={canvas} width={960} height={480} />
+        <canvas ref={canvas} width={544} height={272} />
+        <img className="grid-overlay" src={gridOverlay} alt="" />
         <div className="icon-bar icons-bottom">
           <div
             className={`icon${activeIcon === "bathroom" ? " active" : ""}`}

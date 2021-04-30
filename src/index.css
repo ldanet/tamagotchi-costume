@@ -6,3 +6,8 @@ body {
   margin: 0;
   height: 100%;
 }
+
+button {
+  min-width: 50px;
+  min-height: 50px;
+}

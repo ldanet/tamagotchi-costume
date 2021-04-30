@@ -1,4 +1,4 @@
-export type FrameCoordinates = [number, number];
+export type FrameCoordinates = { x: number; y: number };
 
 class Sprite {
   sprite: {
@@ -34,7 +34,7 @@ class Sprite {
       frames.push([]);
 
       for (col = 0; col < columns; col++) {
-        frames[row][col] = [col * frameWidth, row * frameHeight];
+        frames[row][col] = { x: col * frameWidth, y: row * frameHeight };
       }
     }
 
@@ -54,10 +54,10 @@ class Sprite {
     this.get = this.get.bind(this);
   }
 
-  get(row = 0) {
+  get(column = 0, row = 0) {
     return {
       ...this.sprite,
-      frames: this.sprite.frames[row],
+      coord: this.sprite.frames[row][column],
     };
   }
 }

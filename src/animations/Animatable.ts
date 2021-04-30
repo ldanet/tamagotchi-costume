@@ -40,6 +40,8 @@ export type AnimationDef = {
   frameHeight: number;
 };
 
+const pixelSize = 17;
+
 abstract class Animatable {
   context: CanvasRenderingContext2D | null;
   standardFrameWidth: number;
@@ -92,7 +94,7 @@ abstract class Animatable {
 
   drawFrame(
     image: HTMLImageElement,
-    frame: FrameCoordinates = [0, 0],
+    frame: FrameCoordinates = { x: 0, y: 0 },
     width: number,
     height: number,
     ms = this.ms,
@@ -105,7 +107,8 @@ abstract class Animatable {
       requestAnimationFrame(() => {
         this.context?.drawImage(
           image,
-          ...frame,
+          frame.x,
+          frame.y,
           width,
           height,
           positionX,
@@ -125,14 +128,18 @@ abstract class Animatable {
   }
 
   moveImage(
-    draw: (ms: number, x: number, y: number) => any,
+    draw: (
+      ms: number,
+      x: number,
+      y: number
+    ) => Generator<any, Promise<void>, any>,
     options: MoveImageOptions
   ) {
     const moveTo = {
-      right: 30,
-      left: -30,
-      up: -30,
-      down: 30,
+      right: pixelSize,
+      left: -pixelSize,
+      up: -pixelSize,
+      down: pixelSize,
     };
 
     let incrementX = 0;
