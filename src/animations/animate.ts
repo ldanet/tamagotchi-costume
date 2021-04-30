@@ -17,7 +17,7 @@ export const clear = (ctx: CanvasRenderingContext2D) =>
 export const fill = (ctx: CanvasRenderingContext2D) =>
   ctx.fillRect(0, 0, 544, 272);
 
-function drawFrame(
+export function drawFrame(
   ctx: CanvasRenderingContext2D,
   frame: AnimationFrame,
   lightsOff: boolean
@@ -50,8 +50,7 @@ export const useAnimationLoop = (
   ctx: CanvasRenderingContext2D | null,
   loopingAnimation: Animation,
   lightsOff: boolean,
-  setBusy: (busy: boolean) => void,
-  animateLoop: boolean
+  setBusy: (busy: boolean) => void
 ) => {
   const animationQueue = useRef<Animation>([...loopingAnimation]);
 
@@ -62,7 +61,7 @@ export const useAnimationLoop = (
   useEffect(() => {
     let run = true;
     async function loop() {
-      while (animateLoop && run && ctx) {
+      while (run && ctx) {
         if (!animationQueue.current.length) {
           setBusy(false);
           setAnimation(loopingAnimation);
@@ -78,7 +77,7 @@ export const useAnimationLoop = (
     return () => {
       run = false;
     };
-  }, [loopingAnimation, setAnimation, setBusy, animateLoop, ctx, lightsOff]);
+  }, [loopingAnimation, setAnimation, setBusy, ctx, lightsOff]);
 
   return { setAnimation };
 };

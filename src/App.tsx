@@ -12,10 +12,15 @@ import attentionIcon from "./icons/attention.png";
 import gridOverlay from "./grid-overlay.png";
 
 import "./App.css";
-import { animate, clear, fill, useAnimationLoop } from "./animations/animate";
-import { foodAnimation, idleAnimation } from "./animations/animations";
+import { clear, fill, useAnimationLoop } from "./animations/animate";
+import {
+  foodAnimation,
+  FoodOption,
+  foodScreen,
+  idleAnimation,
+} from "./animations/animations";
 
-type Mode = "idle" | "food" | "light" | "status";
+type Mode = "idle" | "food" | "game" | "status";
 
 const options = [
   "none",
@@ -36,15 +41,17 @@ function App() {
   const [mode, setMode] = useState<Mode>("idle");
   const [activeOption, setActiveOption] = useState<number>(0);
   const [needsAttention, setNeedsAttention] = useState<boolean>(false);
+  const [animationLoop, setAnimationLoop] = useState(idleAnimation);
+
+  const [foodOption, setFoodOption] = useState<FoodOption>("meal");
 
   const activeIcon = options[activeOption];
 
   const { setAnimation } = useAnimationLoop(
     ctx.current,
-    idleAnimation,
+    animationLoop,
     lightsOff,
-    setBusy,
-    true
+    setBusy
   );
 
   useEffect(() => {
@@ -56,25 +63,49 @@ function App() {
 
   const handleA = useCallback(() => {
     if (busy) return;
-    if (mode === "idle") {
-      setActiveOption((curr) => (curr + 1) % options.length);
+    switch (mode) {
+      case "idle": {
+        setActiveOption((curr) => (curr + 1) % options.length);
+        break;
+      }
+      case "food": {
+        const newOption: FoodOption = foodOption === "meal" ? "snack" : "meal";
+        setFoodOption(newOption);
+        setAnimationLoop([foodScreen(newOption)]);
+      }
     }
-  }, [mode, busy]);
+  }, [mode, busy, foodOption, setAnimationLoop]);
 
   const handleB = useCallback(async () => {
     if (busy) return;
-    if (mode === "idle") {
-      if (activeIcon === "food" && !lightsOff) {
-        setBusy(true);
-        setAnimation(foodAnimation("meal"));
+    switch (mode) {
+      case "idle": {
+        if (activeIcon === "food" && !lightsOff) {
+          setFoodOption("meal");
+          setMode("food");
+          setAnimation([]);
+          setAnimationLoop([foodScreen(foodOption)]);
+        }
+        if (activeIcon === "light") {
+          if (!ctx.current) return;
+          lightsOff ? clear(ctx.current) : fill(ctx.current);
+          setlightsOff((current) => !current);
+        }
+        break;
       }
-      if (activeIcon === "light") {
-        if (!ctx.current) return;
-        lightsOff ? clear(ctx.current) : fill(ctx.current);
-        setlightsOff((current) => !current);
+      case "food": {
+        setBusy(true);
+        setAnimation(foodAnimation(foodOption));
       }
     }
-  }, [mode, activeIcon, busy, lightsOff, setAnimation]);
+  }, [mode, activeIcon, busy, lightsOff, setAnimation, foodOption]);
+
+  const handleC = useCallback(() => {
+    if (busy || mode === "idle") return;
+    setAnimation([]);
+    setAnimationLoop(idleAnimation);
+    setMode("idle");
+  }, [busy, setAnimation, mode]);
 
   return (
     <div className="App">
@@ -125,7 +156,9 @@ function App() {
         <button id="b" onClick={handleB}>
           B
         </button>
-        <button id="c">C</button>
+        <button id="c" onClick={handleC}>
+          C
+        </button>
       </div>
     </div>
   );
