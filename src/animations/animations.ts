@@ -43,29 +43,25 @@ export const foodAnimation = (type: "meal" | "snack"): Animation => {
         openMouthKid,
       ],
     },
-    {
-      sprites: [foodFrame(0), openMouthKid],
-    },
-    {
-      sprites: [foodFrame(1), closedMouthKid],
-    },
-    {
-      sprites: [foodFrame(1), openMouthKid],
-    },
-    {
-      sprites: [foodFrame(2), closedMouthKid],
-    },
-    {
-      sprites: [foodFrame(2), openMouthKid],
-    },
-    {
-      sprites: [closedMouthKid],
-    },
-    {
-      sprites: [openMouthKid],
-    },
-    {
-      sprites: [closedMouthKid],
-    },
+    { sprites: [foodFrame(0), openMouthKid] },
+    { sprites: [foodFrame(1), closedMouthKid] },
+    { sprites: [foodFrame(1), openMouthKid] },
+    { sprites: [foodFrame(2), closedMouthKid] },
+    { sprites: [foodFrame(2), openMouthKid] },
+    { sprites: [closedMouthKid] },
+    { sprites: [openMouthKid] },
+    { sprites: [closedMouthKid] },
   ];
 };
+
+export const idleAnimation: Animation = [
+  { sprites: [{ sprite: kid, frame: [0, 0], x: 12, y: 7 }] },
+  { sprites: [{ sprite: kid, frame: [0, 0], x: 9, y: 7 }] },
+  { sprites: [{ sprite: kid, frame: [1, 0], x: 6, y: 8 }] },
+  { sprites: [{ sprite: kid, frame: [1, 0], x: 9, y: 8 }] },
+  { sprites: [{ sprite: kid, frame: [0, 0], x: 7, y: 7 }] },
+  { sprites: [{ sprite: kid, frame: [0, 0], x: 10, y: 7 }] },
+  { sprites: [{ sprite: kid, frame: [1, 0], x: 14, y: 8 }] },
+  { sprites: [{ sprite: kid, frame: [1, 0], x: 18, y: 8 }] },
+  { sprites: [{ sprite: kid, frame: [0, 0], x: 14, y: 7 }] },
+];

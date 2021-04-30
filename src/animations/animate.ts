@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from "react";
 import { Animation, AnimationFrame } from "./animations";
 
 const pixelSize = 17;
@@ -10,25 +11,25 @@ const delay = (ms: number) => {
   });
 };
 
-export const clear = (context: CanvasRenderingContext2D) =>
-  context.clearRect(0, 0, 544, 272);
+export const clear = (ctx: CanvasRenderingContext2D) =>
+  ctx.clearRect(0, 0, 544, 272);
 
-export const fill = (context: CanvasRenderingContext2D) =>
-  context.fillRect(0, 0, 544, 272);
+export const fill = (ctx: CanvasRenderingContext2D) =>
+  ctx.fillRect(0, 0, 544, 272);
 
 function drawFrame(
-  context: CanvasRenderingContext2D,
+  ctx: CanvasRenderingContext2D,
   frame: AnimationFrame,
   lightsOff: boolean
 ) {
   return new Promise<void>((resolve) => {
     requestAnimationFrame(() => {
-      lightsOff ? fill(context) : clear(context);
+      lightsOff ? fill(ctx) : clear(ctx);
       frame.sprites.forEach((frameSprite) => {
         const { sprite, x, y, frame } = frameSprite;
         const source = sprite.get(...frame);
         const { coord, frameWidth, frameHeight } = source;
-        context.drawImage(
+        ctx.drawImage(
           source.image,
           coord.x,
           coord.y,
@@ -45,20 +46,39 @@ function drawFrame(
   });
 }
 
-export async function animate(
-  context: CanvasRenderingContext2D | null,
-  animation: Animation,
-  lightsOff: boolean
-) {
-  if (!context) return;
-  for (let index = 0; index < animation.length; index++) {
-    const frame = animation[index];
-    await drawFrame(context, frame, lightsOff);
-    await delay(frame.ms ?? 500);
-  }
-  if (lightsOff) {
-    fill(context);
-  } else {
-    clear(context);
-  }
-}
+export const useAnimationLoop = (
+  ctx: CanvasRenderingContext2D | null,
+  loopingAnimation: Animation,
+  lightsOff: boolean,
+  setBusy: (busy: boolean) => void,
+  animateLoop: boolean
+) => {
+  const animationQueue = useRef<Animation>([...loopingAnimation]);
+
+  const setAnimation = useCallback((animation: Animation) => {
+    animationQueue.current = [...animation];
+  }, []);
+
+  useEffect(() => {
+    let run = true;
+    async function loop() {
+      while (animateLoop && run && ctx) {
+        if (!animationQueue.current.length) {
+          setBusy(false);
+          setAnimation(loopingAnimation);
+        }
+        const frame = animationQueue.current.shift();
+        if (frame) {
+          await drawFrame(ctx, frame, lightsOff);
+          await delay(frame.ms ?? 500);
+        }
+      }
+    }
+    loop();
+    return () => {
+      run = false;
+    };
+  }, [loopingAnimation, setAnimation, setBusy, animateLoop, ctx, lightsOff]);
+
+  return { setAnimation };
+};

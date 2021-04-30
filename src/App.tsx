@@ -12,8 +12,8 @@ import attentionIcon from "./icons/attention.png";
 import gridOverlay from "./grid-overlay.png";
 
 import "./App.css";
-import { animate, clear, fill } from "./animations/animate";
-import { foodAnimation } from "./animations/animations";
+import { animate, clear, fill, useAnimationLoop } from "./animations/animate";
+import { foodAnimation, idleAnimation } from "./animations/animations";
 
 type Mode = "idle" | "food" | "light" | "status";
 
@@ -30,7 +30,7 @@ const options = [
 
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
-  const context = useRef<CanvasRenderingContext2D | null>(null);
+  const ctx = useRef<CanvasRenderingContext2D | null>(null);
   const [busy, setBusy] = useState(false);
   const [lightsOff, setlightsOff] = useState(false);
   const [mode, setMode] = useState<Mode>("idle");
@@ -38,12 +38,19 @@ function App() {
   const [needsAttention, setNeedsAttention] = useState<boolean>(false);
 
   const activeIcon = options[activeOption];
-  console.log("activeIcon: ", activeIcon);
+
+  const { setAnimation } = useAnimationLoop(
+    ctx.current,
+    idleAnimation,
+    lightsOff,
+    setBusy,
+    true
+  );
 
   useEffect(() => {
     if (canvas.current) {
-      context.current = canvas.current.getContext("2d");
-      if (context.current) context.current.imageSmoothingEnabled = false;
+      ctx.current = canvas.current.getContext("2d");
+      if (ctx.current) ctx.current.imageSmoothingEnabled = false;
     }
   }, []);
 
@@ -59,16 +66,15 @@ function App() {
     if (mode === "idle") {
       if (activeIcon === "food" && !lightsOff) {
         setBusy(true);
-        await animate(context.current, foodAnimation("meal"), lightsOff);
-        setBusy(false);
+        setAnimation(foodAnimation("meal"));
       }
       if (activeIcon === "light") {
-        if (!context.current) return;
-        lightsOff ? clear(context.current) : fill(context.current);
+        if (!ctx.current) return;
+        lightsOff ? clear(ctx.current) : fill(ctx.current);
         setlightsOff((current) => !current);
       }
     }
-  }, [mode, activeIcon, busy, lightsOff]);
+  }, [mode, activeIcon, busy, lightsOff, setAnimation]);
 
   return (
     <div className="App">
