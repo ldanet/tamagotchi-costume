@@ -20,6 +20,7 @@ import {
   useAnimationLoop,
 } from "./animations/animate";
 import {
+  angryAnimation,
   denyAnimation,
   foodAnimation,
   FoodOption,
@@ -123,10 +124,21 @@ function App() {
             setlightsOff((current) => !current);
             break;
           }
+          case "discipline": {
+            setPauseLoop(true);
+            setAnimation([]);
+            setBusy(true);
+            await animate(ctx.current, angryAnimation(gender));
+            setBusy(false);
+            setPauseLoop(false);
+            break;
+          }
           default: {
             setPauseLoop(true);
             setAnimation([]);
+            setBusy(true);
             await animate(ctx.current, denyAnimation(gender));
+            setBusy(false);
             setPauseLoop(false);
           }
         }

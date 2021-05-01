@@ -1,6 +1,8 @@
 export type FrameCoordinates = { x: number; y: number };
 
-class Sprite {
+export type FrameSelection = [number, number];
+
+class Sprite<FrameMap extends { [key: string]: FrameSelection } = {}> {
   sprite: {
     image: HTMLImageElement;
     width: number;
@@ -9,16 +11,18 @@ class Sprite {
     rows: number;
     center: number;
     count: number;
-    frames: FrameCoordinates[][];
+    framesCoord: FrameCoordinates[][];
     frameWidth: number;
     frameHeight: number;
+    frames: FrameMap;
   };
   constructor(
     src: string,
     width: number,
     height: number,
     columns: number,
-    rows: number
+    rows: number,
+    frames: FrameMap = {} as FrameMap
   ) {
     const image = new Image();
     image.src = src;
@@ -26,15 +30,15 @@ class Sprite {
     const frameWidth = width / columns;
     const frameHeight = height / rows;
 
-    const frames: FrameCoordinates[][] = [];
+    const framesCoord: FrameCoordinates[][] = [];
     let col: number;
     let row: number;
 
     for (row = 0; row < rows; row++) {
-      frames.push([]);
+      framesCoord.push([]);
 
       for (col = 0; col < columns; col++) {
-        frames[row][col] = { x: col * frameWidth, y: row * frameHeight };
+        framesCoord[row][col] = { x: col * frameWidth, y: row * frameHeight };
       }
     }
 
@@ -46,9 +50,10 @@ class Sprite {
       rows,
       center: frameWidth / 2,
       count: columns,
-      frames,
+      framesCoord,
       frameWidth,
       frameHeight,
+      frames,
     };
 
     this.get = this.get.bind(this);
@@ -57,7 +62,7 @@ class Sprite {
   get(column = 0, row = 0) {
     return {
       ...this.sprite,
-      coord: this.sprite.frames[row][column],
+      coord: this.sprite.framesCoord[row][column],
     };
   }
 }
