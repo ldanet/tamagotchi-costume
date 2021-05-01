@@ -47,9 +47,9 @@ const genders: Gender[] = ["girl", "boy"];
 
 const maxNeedLevel = 4;
 
-const poopInterval = 1 * 60 * 1000;
-const hungerInterval = 1 * 60 * 1000;
-const sadnessInterval = 1 * 60 * 1000;
+const poopInterval = 15 * 60 * 1000;
+const hungerInterval = 5 * 60 * 1000;
+const happinessInterval = 5 * 60 * 1000;
 
 const getRandomGender = (): Gender =>
   genders[Math.floor(Math.random() * 10) % 2];
@@ -101,6 +101,26 @@ function App() {
 
   useEffect(() => {
     const interval = setInterval(() => setHasPoop(true), poopInterval);
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(
+      () => setHungryLevel((lvl) => (lvl ? lvl - 1 : lvl)),
+      hungerInterval
+    );
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(
+      () => setHappyLevel((lvl) => (lvl ? lvl - 1 : lvl)),
+      happinessInterval
+    );
     return () => {
       clearInterval(interval);
     };
