@@ -31,7 +31,7 @@ import {
   washAnimation,
 } from "./animations/animations";
 
-type Mode = "idle" | "food" | "game" | "status" | "egg";
+type Mode = "idle" | "food" | "game" | "status" | "egg" | "dead";
 
 const options = [
   "food",
@@ -46,6 +46,10 @@ const options = [
 const genders: Gender[] = ["girl", "boy"];
 
 const maxNeedLevel = 4;
+
+const poopInterval = 1 * 60 * 1000;
+const hungerInterval = 1 * 60 * 1000;
+const sadnessInterval = 1 * 60 * 1000;
 
 const getRandomGender = (): Gender =>
   genders[Math.floor(Math.random() * 10) % 2];
@@ -79,7 +83,9 @@ function App() {
   const [statusPage, setStatusPage] = useState<number>(0);
 
   // Animation
-  const [animationLoop, setAnimationLoop] = useState(idleAnimation(gender));
+  const [animationLoop, setAnimationLoop] = useState(
+    idleAnimation(gender, hasPoop)
+  );
   const [pauseLoop, setPauseLoop] = useState(false);
 
   useEffect(() => {
@@ -87,6 +93,17 @@ function App() {
       ctx.current = canvas.current.getContext("2d");
       if (ctx.current) ctx.current.imageSmoothingEnabled = false;
     }
+  }, []);
+
+  useEffect(() => {
+    setAnimationLoop(idleAnimation(gender, hasPoop));
+  }, [gender, hasPoop]);
+
+  useEffect(() => {
+    const interval = setInterval(() => setHasPoop(true), poopInterval);
+    return () => {
+      clearInterval(interval);
+    };
   }, []);
 
   const { setAnimation, currentFrame } = useAnimationLoop(
@@ -159,7 +176,7 @@ function App() {
             setPauseLoop(true);
             setAnimation([]);
             setBusy(true);
-            await animate(ctx.current, angryAnimation(gender));
+            await animate(ctx.current, angryAnimation(gender, hasPoop));
             setBusy(false);
             setPauseLoop(false);
             break;
@@ -192,7 +209,7 @@ function App() {
               setPauseLoop(true);
               setAnimation([]);
               setBusy(true);
-              await animate(ctx.current, denyAnimation(gender));
+              await animate(ctx.current, denyAnimation(gender, hasPoop));
               setBusy(false);
               setPauseLoop(false);
             }
@@ -205,7 +222,7 @@ function App() {
         if (foodOption === "snack" || hungryLevel < maxNeedLevel) {
           await animate(
             ctx.current,
-            foodAnimation(gender, foodOption),
+            foodAnimation(gender, foodOption, hasPoop),
             lightsOff
           );
           if (foodOption === "meal") {
@@ -214,7 +231,7 @@ function App() {
             setHappyLevel((level) => Math.min(level + 1, maxNeedLevel));
           }
         } else {
-          await animate(ctx.current, denyAnimation(gender));
+          await animate(ctx.current, denyAnimation(gender, hasPoop));
         }
         setBusy(false);
         drawFrame(ctx.current, foodScreen(foodOption), lightsOff);
@@ -236,15 +253,15 @@ function App() {
     hungryLevel,
     turnStatusPage,
     happyLevel,
+    hasPoop,
   ]);
 
   const handleC = useCallback(() => {
     if (busy || mode === "idle") return;
     setAnimation([]);
-    setAnimationLoop(idleAnimation(gender));
     setMode("idle");
     setPauseLoop(false);
-  }, [busy, setAnimation, mode, gender]);
+  }, [busy, setAnimation, mode]);
 
   return (
     <div className="App">

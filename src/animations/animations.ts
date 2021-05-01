@@ -6,6 +6,7 @@ import iconsSprite from "./sprites/icons.png";
 import statusSprite from "./sprites/status.png";
 import foodSelectionSprite from "./sprites/foodSelection.png";
 import waveSprite from "./sprites/wave.png";
+import poopSprite from "./sprites/poop.png";
 import numbersSprite from "./sprites/numbers.png";
 
 type FrameSprite = {
@@ -78,6 +79,7 @@ const icons = new Sprite(iconsSprite, 32, 32, 4, 4, {
 });
 const foodSelection = new Sprite(foodSelectionSprite, 32, 16, 1, 1);
 const wave = new Sprite(waveSprite, 6, 16, 1, 1);
+const poop = new Sprite(poopSprite, 9, 16, 1, 2);
 
 export type FoodOption = "meal" | "snack";
 export type Gender = "boy" | "girl";
@@ -95,29 +97,47 @@ const translateAnimationFrame = (
   })),
 });
 
+const poopSprites: FrameSprite[] = [
+  { sprite: poop, frame: [0, 0], x: 23, y: 8 },
+  { sprite: poop, frame: [0, 1], x: 23, y: 8 },
+];
+
+const injectPoop = (frame: AnimationFrame, index: number): AnimationFrame => {
+  const poopIndex = Math.floor((index % 4) / 2);
+  console.log("poopIndex: ", poopIndex);
+  return {
+    ...frame,
+    sprites: [...frame.sprites, poopSprites[poopIndex]],
+  };
+};
+
 // Animations
 
-export const foodAnimation = (gender: Gender, type: FoodOption): Animation => {
+export const foodAnimation = (
+  gender: Gender,
+  type: FoodOption,
+  hasPoop: boolean
+): Animation => {
   const foodRow = type === "meal" ? 0 : 1;
   const baby = getBabySprite(gender);
   const { eat, flat } = baby.sprite.frames;
   const babyFrame = (frame: FrameSelection): FrameSprite => ({
     sprite: baby,
     frame,
-    x: 16,
+    x: 12,
     y: 8,
   });
 
   const foodFrame = (col: number): FrameSprite => ({
     sprite: food,
     frame: [col, foodRow],
-    x: 6,
+    x: 3,
     y: 8,
   });
   return [
     {
       sprites: [
-        { sprite: food, frame: [0, foodRow], x: 6, y: 0 },
+        { sprite: food, frame: [0, foodRow], x: 3, y: 0 } as FrameSprite,
         babyFrame(eat),
       ],
     },
@@ -129,10 +149,10 @@ export const foodAnimation = (gender: Gender, type: FoodOption): Animation => {
     { sprites: [babyFrame(flat)] },
     { sprites: [babyFrame(eat)] },
     { sprites: [babyFrame(flat)] },
-  ];
+  ].map((frame, index) => (hasPoop ? injectPoop(frame, index + 1) : frame));
 };
 
-export const idleAnimation = (gender: Gender): Animation => {
+export const idleAnimation = (gender: Gender, hasPoop: boolean): Animation => {
   const baby = getBabySprite(gender);
   const { flat, neutral } = baby.sprite.frames;
   const animationFrame = (
@@ -155,11 +175,14 @@ export const idleAnimation = (gender: Gender): Animation => {
     animationFrame(neutral, 14),
     animationFrame(neutral, 16),
     animationFrame(flat, 12),
+    animationFrame(flat, 10),
     animationFrame(neutral, 8),
     animationFrame(neutral, 6),
     animationFrame(flat, 8),
     animationFrame(flat, 10),
-  ];
+  ].map((frame, index) =>
+    hasPoop ? injectPoop(translateAnimationFrame(frame, -2), index) : frame
+  );
 };
 
 export const foodScreen = (type: FoodOption): AnimationFrame => ({
@@ -174,16 +197,18 @@ export const foodScreen = (type: FoodOption): AnimationFrame => ({
   ],
 });
 
-export const denyAnimation = (gender: Gender): Animation => {
+export const denyAnimation = (gender: Gender, hasPoop: boolean): Animation => {
   const baby = getBabySprite(gender);
   const cycle: Animation = [
     { sprites: [{ sprite: baby, frame: [2, 0], x: 12, y: 8 }] },
     { sprites: [{ sprite: baby, frame: [7, 0], x: 12, y: 8 }] },
   ];
-  return [...cycle, ...cycle, ...cycle];
+  return [...cycle, ...cycle, ...cycle].map((frame, index) =>
+    hasPoop ? injectPoop(frame, index) : frame
+  );
 };
 
-export const happyAnimation = (gender: Gender): Animation => {
+export const happyAnimation = (gender: Gender, hasPoop: boolean): Animation => {
   const baby = getBabySprite(gender);
   const { happy } = icons.sprite.frames;
   const cycle: Animation = [
@@ -195,10 +220,12 @@ export const happyAnimation = (gender: Gender): Animation => {
       ],
     },
   ];
-  return [...cycle, ...cycle, ...cycle];
+  return [...cycle, ...cycle, ...cycle].map((frame, index) =>
+    hasPoop ? injectPoop(translateAnimationFrame(frame, -6), index) : frame
+  );
 };
 
-export const angryAnimation = (gender: Gender): Animation => {
+export const angryAnimation = (gender: Gender, hasPoop: boolean): Animation => {
   const baby = getBabySprite(gender);
   const { angry1, angry2 } = icons.sprite.frames;
   const cycle: Animation = [
@@ -215,7 +242,9 @@ export const angryAnimation = (gender: Gender): Animation => {
       ],
     },
   ];
-  return [...cycle, ...cycle, ...cycle];
+  return [...cycle, ...cycle, ...cycle].map((frame, index) =>
+    hasPoop ? injectPoop(translateAnimationFrame(frame, -6), index) : frame
+  );
 };
 
 export const washAnimation = (currentFrame: AnimationFrame): Animation => {
