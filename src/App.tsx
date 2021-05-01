@@ -32,6 +32,7 @@ import {
   Gender,
   happyAnimation,
   idleAnimation,
+  poopAnimation,
   statusScreen,
   washAnimation,
 } from "./animations/animations";
@@ -56,9 +57,9 @@ const maxGameRounds = 3;
 
 const directions = ["left", "right"] as const;
 
-const poopInterval = 15 * 60 * 1000;
-const hungerInterval = 5 * 60 * 1000;
-const happinessInterval = 5 * 60 * 1000;
+const poopInterval = 8 * 60 * 1000;
+const hungerInterval = 2.5 * 60 * 1000;
+const happinessInterval = 2.5 * 60 * 1000;
 
 const getRandomGender = (): Gender =>
   genders[Math.floor(Math.random() * 10) % 2];
@@ -76,6 +77,7 @@ function App() {
 
   // Character
   const [gender, setGender] = useState<Gender>(getRandomGender());
+  const [isWaitingToPoop, setIsWaitingToPoop] = useState<boolean>(false);
   const [hasPoop, setHasPoop] = useState<boolean>(false);
   const [hungryLevel, setHungryLevel] = useState<number>(0);
   const [happyLevel, setHappyLevel] = useState<number>(0);
@@ -109,7 +111,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => setHasPoop(true), poopInterval);
+    const interval = setInterval(() => setIsWaitingToPoop(true), poopInterval);
     return () => {
       clearInterval(interval);
     };
@@ -143,6 +145,24 @@ function App() {
     pauseLoop
   );
 
+  // Poop when not busy
+  useEffect(() => {
+    const poop = async () => {
+      setBusy(true);
+      setPauseLoop(true);
+      setHasPoop(true);
+      setAnimation([]);
+      setIsWaitingToPoop(false);
+      await animate(ctx.current, poopAnimation(gender));
+      setBusy(false);
+      setPauseLoop(false);
+    };
+    if (!hasPoop && isWaitingToPoop && mode === "idle" && !busy) {
+      poop();
+    }
+  }, [gender, hasPoop, isWaitingToPoop, mode, busy, setAnimation]);
+
+  // Choose relevant looping animation
   useEffect(() => {
     if (mode === "idle") {
       setAnimation([]);

@@ -375,6 +375,26 @@ export const washAnimation = (currentFrame: AnimationFrame): Animation => {
   ];
 };
 
+export const poopAnimation = (gender: Gender): Animation => {
+  const baby = getBabySprite(gender);
+  const { flat, neutral } = baby.sprite.frames;
+  const cycle = [
+    { ms: 1000, sprites: [{ sprite: baby, frame: flat, x: 12, y: 8 }] },
+    { ms: 1000, sprites: [{ sprite: baby, frame: flat, x: 13, y: 8 }] },
+  ];
+  return [
+    ...cycle,
+    ...cycle,
+    ...cycle,
+    {
+      sprites: [
+        { sprite: baby, frame: neutral, x: 12, y: 8 },
+        { sprite: poop, frame: [0, 1], x: 20, y: 8 },
+      ],
+    },
+  ];
+};
+
 export const statusScreen = (
   gender: Gender,
   hungryLevel: number,
