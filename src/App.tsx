@@ -25,7 +25,12 @@ import {
   foodAnimation,
   FoodOption,
   foodScreen,
+  gameActionAnimation,
+  gameScoreAnimation,
+  gameStartAnimation,
+  gameWaitAnimation,
   Gender,
+  happyAnimation,
   idleAnimation,
   statusScreen,
   washAnimation,
@@ -46,6 +51,10 @@ const options = [
 const genders: Gender[] = ["girl", "boy"];
 
 const maxNeedLevel = 4;
+
+const maxGameRounds = 3;
+
+const directions = ["left", "right"] as const;
 
 const poopInterval = 15 * 60 * 1000;
 const hungerInterval = 5 * 60 * 1000;
@@ -79,6 +88,10 @@ function App() {
   // Food
   const [foodOption, setFoodOption] = useState<FoodOption>("meal");
 
+  // Game
+  const [gameRound, setGameRound] = useState<number>(1);
+  const gameScore = useRef<number>(0);
+
   // Status
   const [statusPage, setStatusPage] = useState<number>(0);
 
@@ -94,10 +107,6 @@ function App() {
       if (ctx.current) ctx.current.imageSmoothingEnabled = false;
     }
   }, []);
-
-  useEffect(() => {
-    setAnimationLoop(idleAnimation(gender, hasPoop));
-  }, [gender, hasPoop]);
 
   useEffect(() => {
     const interval = setInterval(() => setHasPoop(true), poopInterval);
@@ -134,6 +143,56 @@ function App() {
     pauseLoop
   );
 
+  useEffect(() => {
+    if (mode === "idle") {
+      setAnimation([]);
+      setAnimationLoop(idleAnimation(gender, hasPoop));
+    }
+    if (mode === "game") {
+      setAnimation([]);
+      setAnimationLoop(gameWaitAnimation(gender, hasPoop));
+    }
+  }, [gender, hasPoop, mode, setAnimation]);
+
+  const guessDirection = useCallback(
+    async (guess: "left" | "right") => {
+      const tamaFacing = directions[Math.floor(Math.random() * 2)];
+      const isWin = guess === tamaFacing;
+      setBusy(true);
+      setPauseLoop(true);
+      await animate(
+        ctx.current,
+        gameActionAnimation(gender, guess, tamaFacing)
+      );
+      if (isWin) {
+        await animate(ctx.current, happyAnimation(gender, hasPoop));
+        gameScore.current++;
+      } else {
+        await animate(ctx.current, angryAnimation(gender, hasPoop));
+      }
+      if (gameRound >= maxGameRounds) {
+        const gameWon = gameScore.current > maxGameRounds / 2;
+        await animate(
+          ctx.current,
+          gameScoreAnimation(
+            gender,
+            gameScore.current,
+            maxGameRounds - gameScore.current
+          )
+        );
+        if (gameWon) {
+          await animate(ctx.current, happyAnimation(gender, hasPoop));
+          setHappyLevel((lvl) => lvl + 1);
+        }
+        setMode("idle");
+      }
+      setGameRound(gameRound + 1);
+      setBusy(false);
+      setPauseLoop(false);
+    },
+    [gender, hasPoop, gameRound, gameScore]
+  );
+
   const turnStatusPage = useCallback(
     (direction: "next" | "prev") => {
       const statusScreens = statusScreen(gender, hungryLevel, happyLevel);
@@ -166,11 +225,16 @@ function App() {
         }
         break;
       }
+      case "game": {
+        guessDirection("left");
+        break;
+      }
       case "status": {
         turnStatusPage("prev");
+        break;
       }
     }
-  }, [mode, busy, foodOption, lightsOff, turnStatusPage]);
+  }, [mode, busy, foodOption, lightsOff, turnStatusPage, guessDirection]);
 
   const handleB = useCallback(async () => {
     if (busy) return;
@@ -192,11 +256,14 @@ function App() {
             setlightsOff((current) => !current);
             break;
           }
-          case "discipline": {
+          case "game": {
             setPauseLoop(true);
             setAnimation([]);
+            setMode("game");
+            setGameRound(1);
+            gameScore.current = 0;
             setBusy(true);
-            await animate(ctx.current, angryAnimation(gender, hasPoop));
+            await animate(ctx.current, gameStartAnimation(gender, hasPoop));
             setBusy(false);
             setPauseLoop(false);
             break;
@@ -222,6 +289,15 @@ function App() {
               setAnimation([]);
               drawFrame(ctx.current, screen, false);
             }
+            break;
+          }
+          case "discipline": {
+            setPauseLoop(true);
+            setAnimation([]);
+            setBusy(true);
+            await animate(ctx.current, angryAnimation(gender, hasPoop));
+            setBusy(false);
+            setPauseLoop(false);
             break;
           }
           default: {
@@ -257,8 +333,13 @@ function App() {
         drawFrame(ctx.current, foodScreen(foodOption), lightsOff);
         break;
       }
+      case "game": {
+        guessDirection("right");
+        break;
+      }
       case "status": {
         turnStatusPage("next");
+        break;
       }
     }
   }, [
@@ -274,6 +355,7 @@ function App() {
     turnStatusPage,
     happyLevel,
     hasPoop,
+    guessDirection,
   ]);
 
   const handleC = useCallback(() => {

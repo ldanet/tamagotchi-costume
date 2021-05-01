@@ -76,6 +76,7 @@ const icons = new Sprite(iconsSprite, 32, 32, 4, 4, {
   ounce: [0, 3],
   pound: [1, 3],
   gram: [2, 3],
+  versus: [3, 3],
 });
 const foodSelection = new Sprite(foodSelectionSprite, 32, 16, 1, 1);
 const wave = new Sprite(waveSprite, 6, 16, 1, 1);
@@ -212,7 +213,7 @@ export const happyAnimation = (gender: Gender, hasPoop: boolean): Animation => {
   const baby = getBabySprite(gender);
   const { happy } = icons.sprite.frames;
   const cycle: Animation = [
-    { sprites: [{ sprite: baby, frame: [1, 0], x: 20, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 12, y: 8 }] },
     {
       sprites: [
         { sprite: baby, frame: [4, 0], x: 12, y: 8 },
@@ -245,6 +246,118 @@ export const angryAnimation = (gender: Gender, hasPoop: boolean): Animation => {
   return [...cycle, ...cycle, ...cycle].map((frame, index) =>
     hasPoop ? injectPoop(translateAnimationFrame(frame, -6), index) : frame
   );
+};
+
+export const gameStartAnimation = (
+  gender: Gender,
+  hasPoop: boolean
+): Animation => {
+  const baby = getBabySprite(gender);
+  const { neutral } = baby.sprite.frames;
+  const { emptyHeart, fullHeart } = icons.sprite.frames;
+  const animationFrame: AnimationFrame = {
+    sprites: [
+      { sprite: baby, frame: neutral, x: 12, y: 8 },
+      { sprite: icons, frame: emptyHeart, x: 32, y: 8 },
+      { sprite: icons, frame: emptyHeart, x: 48, y: 8 },
+      { sprite: icons, frame: fullHeart, x: 40, y: 0 },
+      { sprite: icons, frame: fullHeart, x: 56, y: 0 },
+      ...(hasPoop ? [poopSprites[1]] : []),
+    ],
+  };
+  return [
+    translateAnimationFrame(animationFrame, -32),
+    translateAnimationFrame(animationFrame, -26),
+    translateAnimationFrame(animationFrame, -19),
+    translateAnimationFrame(animationFrame, -13),
+    translateAnimationFrame(animationFrame, -6),
+    animationFrame,
+  ];
+};
+
+export const gameWaitAnimation = (gender: Gender, hasPoop: boolean) => {
+  const baby = getBabySprite(gender);
+  const { neutral, smile } = baby.sprite.frames;
+  const cycle: Animation = [
+    {
+      sprites: [{ sprite: baby, frame: neutral, x: 12, y: 8 }],
+    },
+    {
+      sprites: [{ sprite: baby, frame: smile, x: 12, y: 8 }],
+    },
+  ];
+  return [...cycle, ...cycle].map((frame, index) =>
+    hasPoop ? injectPoop(frame, index) : frame
+  );
+};
+
+export const gameActionAnimation = (
+  gender: Gender,
+  guess: "left" | "right",
+  tamaFacing: "left" | "right"
+): Animation => {
+  const baby = getBabySprite(gender);
+  const { left, right } = baby.sprite.frames;
+  const { arrowLeft, arrowRight } = icons.sprite.frames;
+  const leftArrow: FrameSprite = {
+    sprite: icons,
+    frame: arrowLeft,
+    x: 0,
+    y: 8,
+  };
+  const rightArrow: FrameSprite = {
+    sprite: icons,
+    frame: arrowRight,
+    x: 24,
+    y: 8,
+  };
+  return [
+    {
+      ms: 2000,
+      sprites: [
+        guess === "left" ? leftArrow : rightArrow,
+        {
+          sprite: baby,
+          frame: tamaFacing === "left" ? left : right,
+          x: 12,
+          y: 8,
+        },
+      ],
+    },
+  ];
+};
+
+export const gameScoreAnimation = (
+  gender: Gender,
+  wonCount: number,
+  lostCount: number
+): Animation => {
+  const baby = getBabySprite(gender);
+  const digits = numbers.sprite.frames;
+  const { neutral } = baby.sprite.frames;
+  const { emptyHeart, versus } = icons.sprite.frames;
+  return [
+    {
+      ms: 3000,
+      sprites: [
+        { sprite: baby, frame: neutral, x: 0, y: 0 },
+        { sprite: icons, frame: emptyHeart, x: 16, y: 0 },
+        {
+          sprite: numbers,
+          frame: digits[wonCount as keyof typeof digits],
+          x: 0,
+          y: 8,
+        },
+        { sprite: icons, frame: versus, x: 8, y: 8 },
+        {
+          sprite: numbers,
+          frame: digits[lostCount as keyof typeof digits],
+          x: 16,
+          y: 8,
+        },
+      ],
+    },
+  ];
 };
 
 export const washAnimation = (currentFrame: AnimationFrame): Animation => {
