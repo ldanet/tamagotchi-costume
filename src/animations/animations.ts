@@ -3,8 +3,10 @@ import foodSprite from "./sprites/food.png";
 import girlSprite from "./sprites/girl.png";
 import boySprite from "./sprites/boy.png";
 import iconsSprite from "./sprites/icons.png";
+import statusSprite from "./sprites/status.png";
 import foodSelectionSprite from "./sprites/foodSelection.png";
 import waveSprite from "./sprites/wave.png";
+import numbersSprite from "./sprites/numbers.png";
 
 type FrameSprite = {
   sprite: Sprite;
@@ -35,6 +37,28 @@ const babyFrameMap = {
 const food = new Sprite(foodSprite, 24, 16, 3, 2);
 const girl = new Sprite(girlSprite, 64, 8, 8, 1, babyFrameMap);
 const boy = new Sprite(boySprite, 64, 8, 8, 1, babyFrameMap);
+const numbers = new Sprite(numbersSprite, 40, 16, 5, 2, {
+  0: [0, 0],
+  1: [1, 0],
+  2: [2, 0],
+  3: [3, 0],
+  4: [4, 1],
+  5: [0, 1],
+  6: [1, 1],
+  7: [2, 1],
+  8: [3, 1],
+  9: [4, 1],
+});
+const status = new Sprite(statusSprite, 32, 64, 1, 8, {
+  hungry: [0, 0],
+  happy: [0, 1],
+  discipline: [0, 2],
+  gaugeEmpty: [0, 3],
+  gaugeQuarter: [0, 4],
+  gaugeHalf: [0, 5],
+  gaugeThreeQuarters: [0, 6],
+  gaugeFull: [0, 7],
+});
 const icons = new Sprite(iconsSprite, 32, 32, 4, 4, {
   angry1: [0, 0],
   angry2: [1, 0],
@@ -206,5 +230,93 @@ export const washAnimation = (currentFrame: AnimationFrame): Animation => {
     translateAnimationFrame(washFrame, -14),
     translateAnimationFrame(washFrame, -23),
     translateAnimationFrame(washFrame, -32),
+  ];
+};
+
+export const statusScreen = (
+  gender: Gender,
+  hungryLevel: number,
+  happyLevel: number
+): AnimationFrame[] => {
+  const baby = getBabySprite(gender);
+  const { neutral } = baby.sprite.frames;
+  const { scale, ounce, year, emptyHeart, fullHeart } = icons.sprite.frames;
+  const { hungry, happy, discipline, gaugeEmpty } = status.sprite.frames;
+  const digits = numbers.sprite.frames;
+  return [
+    {
+      sprites: [
+        { sprite: baby, frame: neutral, x: 0, y: 0 },
+        { sprite: numbers, frame: digits[0], x: 16, y: 0 },
+        { sprite: icons, frame: year, x: 24, y: 0 },
+        { sprite: icons, frame: scale, x: 0, y: 8 },
+        { sprite: numbers, frame: digits[5], x: 16, y: 8 },
+        { sprite: icons, frame: ounce, x: 24, y: 8 },
+      ],
+    },
+    {
+      sprites: [
+        { sprite: status, frame: discipline, x: 0, y: 0 },
+        { sprite: status, frame: gaugeEmpty, x: 0, y: 8 },
+      ],
+    },
+    {
+      sprites: [
+        { sprite: status, frame: hungry, x: 0, y: 0 },
+        {
+          sprite: icons,
+          frame: hungryLevel > 0 ? fullHeart : emptyHeart,
+          x: 0,
+          y: 8,
+        },
+        {
+          sprite: icons,
+          frame: hungryLevel > 1 ? fullHeart : emptyHeart,
+          x: 8,
+          y: 8,
+        },
+        {
+          sprite: icons,
+          frame: hungryLevel > 2 ? fullHeart : emptyHeart,
+          x: 16,
+          y: 8,
+        },
+        {
+          sprite: icons,
+          frame: hungryLevel > 3 ? fullHeart : emptyHeart,
+          x: 24,
+          y: 8,
+        },
+      ],
+    },
+    {
+      sprites: [
+        { sprite: status, frame: happy, x: 0, y: 0 },
+        {
+          sprite: icons,
+          frame: happyLevel > 0 ? fullHeart : emptyHeart,
+          x: 0,
+          y: 8,
+        },
+        {
+          sprite: icons,
+          frame: happyLevel > 1 ? fullHeart : emptyHeart,
+          x: 8,
+          y: 8,
+        },
+        {
+          sprite: icons,
+          frame: happyLevel > 2 ? fullHeart : emptyHeart,
+          x: 16,
+          y: 8,
+        },
+        {
+          sprite: icons,
+          frame: happyLevel > 3 ? fullHeart : emptyHeart,
+          x: 24,
+          y: 8,
+        },
+      ],
+    },
   ];
 };

@@ -27,6 +27,7 @@ import {
   foodScreen,
   Gender,
   idleAnimation,
+  statusScreen,
   washAnimation,
 } from "./animations/animations";
 
@@ -74,6 +75,9 @@ function App() {
   // Food
   const [foodOption, setFoodOption] = useState<FoodOption>("meal");
 
+  // Status
+  const [statusPage, setStatusPage] = useState<number>(0);
+
   // Animation
   const [animationLoop, setAnimationLoop] = useState(idleAnimation(gender));
   const [pauseLoop, setPauseLoop] = useState(false);
@@ -93,6 +97,22 @@ function App() {
     pauseLoop
   );
 
+  const turnStatusPage = useCallback(
+    (direction: "next" | "prev") => {
+      const statusScreens = statusScreen(gender, hungryLevel, happyLevel);
+      const increment = direction === "next" ? 1 : -1;
+      console.log("increment: ", increment);
+      const newPage =
+        (statusPage + increment + statusScreens.length) % statusScreens.length;
+      console.log("statusScreens.length: ", statusScreens.length);
+      console.log("statusPage: ", statusPage);
+      console.log("newPage: ", newPage);
+      setStatusPage(newPage);
+      drawFrame(ctx.current, statusScreens[newPage]);
+    },
+    [gender, hungryLevel, happyLevel, statusPage]
+  );
+
   const handleA = useCallback(() => {
     if (busy) return;
     switch (mode) {
@@ -107,9 +127,13 @@ function App() {
           setFoodOption(newOption);
           drawFrame(ctx.current, foodScreen(newOption), lightsOff);
         }
+        break;
+      }
+      case "status": {
+        turnStatusPage("prev");
       }
     }
-  }, [mode, busy, foodOption, lightsOff]);
+  }, [mode, busy, foodOption, lightsOff, turnStatusPage]);
 
   const handleB = useCallback(async () => {
     if (busy) return;
@@ -152,6 +176,17 @@ function App() {
             }
             break;
           }
+          case "status": {
+            if (!lightsOff) {
+              const screen = statusScreen(gender, hungryLevel, happyLevel)[0];
+              setMode("status");
+              setStatusPage(0);
+              setPauseLoop(true);
+              setAnimation([]);
+              drawFrame(ctx.current, screen, false);
+            }
+            break;
+          }
           default: {
             if (activeIcon) {
               setPauseLoop(true);
@@ -183,6 +218,10 @@ function App() {
         }
         setBusy(false);
         drawFrame(ctx.current, foodScreen(foodOption), lightsOff);
+        break;
+      }
+      case "status": {
+        turnStatusPage("next");
       }
     }
   }, [
@@ -195,6 +234,8 @@ function App() {
     gender,
     currentFrame,
     hungryLevel,
+    turnStatusPage,
+    happyLevel,
   ]);
 
   const handleC = useCallback(() => {
