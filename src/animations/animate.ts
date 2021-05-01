@@ -3,6 +3,8 @@ import { Animation, AnimationFrame } from "./animations";
 
 const pixelSize = 17;
 
+const defaultFrameDurationMs = 500;
+
 const delay = (ms: number) => {
   return new Promise<void>((resolve, reject) => {
     setTimeout(() => {
@@ -56,7 +58,7 @@ export async function animate(
   for (let index = 0; index < animation.length; index++) {
     const frame = animation[index];
     await drawFrame(context, frame, lightsOff);
-    await delay(frame.ms ?? 500);
+    await delay(frame.ms ?? defaultFrameDurationMs);
   }
 }
 
@@ -85,11 +87,13 @@ export const useAnimationLoop = (
         const frame = animationQueue.current.shift();
         if (frame) {
           await drawFrame(ctx, frame, lightsOff);
-          await delay(frame.ms ?? 500);
+          await delay(frame.ms ?? defaultFrameDurationMs);
         }
       }
     }
-    loop();
+
+    if (!pauseLoop) loop();
+
     return () => {
       run = false;
     };

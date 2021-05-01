@@ -23,13 +23,13 @@ import {
   foodAnimation,
   FoodOption,
   foodScreen,
+  Gender,
   idleAnimation,
 } from "./animations/animations";
 
 type Mode = "idle" | "food" | "game" | "status";
 
 const options = [
-  "none",
   "food",
   "light",
   "game",
@@ -39,6 +39,11 @@ const options = [
   "discipline",
 ] as const;
 
+const genders: Gender[] = ["girl", "boy"];
+
+const getRandomGender = (): Gender =>
+  genders[Math.floor(Math.random() * 10) % 2];
+
 function App() {
   const canvas = useRef<HTMLCanvasElement>(null);
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
@@ -46,11 +51,12 @@ function App() {
   // General
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useState<Mode>("idle");
-  const [activeOption, setActiveOption] = useState<number>(0);
+  const [activeOption, setActiveOption] = useState<number>(-1);
 
   const activeIcon = options[activeOption];
 
-  // Needs and health
+  // Character
+  const [gender, setGender] = useState<Gender>(getRandomGender());
   const [needsAttention, setNeedsAttention] = useState<boolean>(false);
 
   // Lights
@@ -60,8 +66,15 @@ function App() {
   const [foodOption, setFoodOption] = useState<FoodOption>("meal");
 
   // Animation
-  const [animationLoop, setAnimationLoop] = useState(idleAnimation);
+  const [animationLoop, setAnimationLoop] = useState(idleAnimation(gender));
   const [pauseLoop, setPauseLoop] = useState(false);
+
+  useEffect(() => {
+    if (canvas.current) {
+      ctx.current = canvas.current.getContext("2d");
+      if (ctx.current) ctx.current.imageSmoothingEnabled = false;
+    }
+  }, []);
 
   const { setAnimation } = useAnimationLoop(
     ctx.current,
@@ -70,13 +83,6 @@ function App() {
     setBusy,
     pauseLoop
   );
-
-  useEffect(() => {
-    if (canvas.current) {
-      ctx.current = canvas.current.getContext("2d");
-      if (ctx.current) ctx.current.imageSmoothingEnabled = false;
-    }
-  }, []);
 
   const handleA = useCallback(() => {
     if (busy) return;
@@ -116,20 +122,24 @@ function App() {
       }
       case "food": {
         setBusy(true);
-        await animate(ctx.current, foodAnimation(foodOption), lightsOff);
+        await animate(
+          ctx.current,
+          foodAnimation(gender, foodOption),
+          lightsOff
+        );
         setBusy(false);
         drawFrame(ctx.current, foodScreen("meal"), lightsOff);
       }
     }
-  }, [mode, activeIcon, busy, lightsOff, setAnimation, foodOption]);
+  }, [mode, activeIcon, busy, lightsOff, setAnimation, foodOption, gender]);
 
   const handleC = useCallback(() => {
     if (busy || mode === "idle") return;
     setAnimation([]);
-    setAnimationLoop(idleAnimation);
+    setAnimationLoop(idleAnimation(gender));
     setMode("idle");
     setPauseLoop(false);
-  }, [busy, setAnimation, mode]);
+  }, [busy, setAnimation, mode, gender]);
 
   return (
     <div className="App">

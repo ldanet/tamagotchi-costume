@@ -1,6 +1,7 @@
 import Sprite from "./Sprite";
 import foodSprite from "./sprites/food.png";
-import kidSprite from "./sprites/kid.png";
+import girlSprite from "./sprites/girl.png";
+import boySprite from "./sprites/boy.png";
 import iconsSprite from "./sprites/icons.png";
 import foodSelectionSprite from "./sprites/foodSelection.png";
 
@@ -20,21 +21,23 @@ export type AnimationFrame = {
 export type Animation = AnimationFrame[];
 
 const food = new Sprite(foodSprite, 24, 16, 3, 2);
-const kid = new Sprite(kidSprite, 56, 8, 7, 1);
+const girl = new Sprite(girlSprite, 64, 8, 8, 1);
+const boy = new Sprite(boySprite, 64, 8, 8, 1);
 const icons = new Sprite(iconsSprite, 32, 32, 4, 4);
 const foodSelection = new Sprite(foodSelectionSprite, 32, 16, 1, 1);
 
 export type FoodOption = "meal" | "snack";
+export type Gender = "boy" | "girl";
 
-export const foodAnimation = (type: FoodOption): Animation => {
+export const foodAnimation = (gender: Gender, type: FoodOption): Animation => {
   const foodRow = type === "meal" ? 0 : 1;
-  const openMouthKid: FrameSprite = { sprite: kid, frame: [3, 0], x: 16, y: 7 };
-  const closedMouthKid: FrameSprite = {
-    sprite: kid,
-    frame: [1, 0],
+  const baby = gender === "girl" ? girl : boy;
+  const babyFrame = (open: boolean): FrameSprite => ({
+    sprite: baby,
+    frame: [open ? 3 : 1, 0],
     x: 16,
     y: 8,
-  };
+  });
 
   const foodFrame = (col: number): FrameSprite => ({
     sprite: food,
@@ -46,31 +49,44 @@ export const foodAnimation = (type: FoodOption): Animation => {
     {
       sprites: [
         { sprite: food, frame: [0, foodRow], x: 6, y: 0 },
-        openMouthKid,
+        babyFrame(true),
       ],
     },
-    { sprites: [foodFrame(0), openMouthKid] },
-    { sprites: [foodFrame(1), closedMouthKid] },
-    { sprites: [foodFrame(1), openMouthKid] },
-    { sprites: [foodFrame(2), closedMouthKid] },
-    { sprites: [foodFrame(2), openMouthKid] },
-    { sprites: [closedMouthKid] },
-    { sprites: [openMouthKid] },
-    { sprites: [closedMouthKid] },
+    { sprites: [foodFrame(0), babyFrame(true)] },
+    { sprites: [foodFrame(1), babyFrame(false)] },
+    { sprites: [foodFrame(1), babyFrame(true)] },
+    { sprites: [foodFrame(2), babyFrame(false)] },
+    { sprites: [foodFrame(2), babyFrame(true)] },
+    { sprites: [babyFrame(false)] },
+    { sprites: [babyFrame(true)] },
+    { sprites: [babyFrame(false)] },
   ];
 };
 
-export const idleAnimation: Animation = [
-  { sprites: [{ sprite: kid, frame: [0, 0], x: 12, y: 7 }] },
-  { sprites: [{ sprite: kid, frame: [0, 0], x: 9, y: 7 }] },
-  { sprites: [{ sprite: kid, frame: [1, 0], x: 6, y: 8 }] },
-  { sprites: [{ sprite: kid, frame: [1, 0], x: 9, y: 8 }] },
-  { sprites: [{ sprite: kid, frame: [0, 0], x: 7, y: 7 }] },
-  { sprites: [{ sprite: kid, frame: [0, 0], x: 10, y: 7 }] },
-  { sprites: [{ sprite: kid, frame: [1, 0], x: 14, y: 8 }] },
-  { sprites: [{ sprite: kid, frame: [1, 0], x: 18, y: 8 }] },
-  { sprites: [{ sprite: kid, frame: [0, 0], x: 14, y: 7 }] },
-];
+export const idleAnimation = (gender: Gender): Animation => {
+  const baby = gender === "girl" ? girl : boy;
+  return [
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 10, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 8, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 6, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 8, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 10, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 14, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 10, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 14, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 14, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 16, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 8, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [0, 0], x: 6, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 8, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [1, 0], x: 10, y: 8 }] },
+  ];
+};
 
 export const foodScreen = (type: FoodOption): AnimationFrame => ({
   sprites: [
