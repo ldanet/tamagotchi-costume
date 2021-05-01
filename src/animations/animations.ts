@@ -4,6 +4,7 @@ import girlSprite from "./sprites/girl.png";
 import boySprite from "./sprites/boy.png";
 import iconsSprite from "./sprites/icons.png";
 import foodSelectionSprite from "./sprites/foodSelection.png";
+import waveSprite from "./sprites/wave.png";
 
 type FrameSprite = {
   sprite: Sprite;
@@ -52,11 +53,23 @@ const icons = new Sprite(iconsSprite, 32, 32, 4, 4, {
   gram: [2, 3],
 });
 const foodSelection = new Sprite(foodSelectionSprite, 32, 16, 1, 1);
+const wave = new Sprite(waveSprite, 6, 16, 1, 1);
 
 export type FoodOption = "meal" | "snack";
 export type Gender = "boy" | "girl";
 
 const getBabySprite = (gender: Gender) => (gender === "girl" ? girl : boy);
+
+const translateAnimationFrame = (
+  animationFrame: AnimationFrame,
+  translateX: number
+): AnimationFrame => ({
+  ...animationFrame,
+  sprites: animationFrame.sprites.map((sprite) => ({
+    ...sprite,
+    x: sprite.x + translateX,
+  })),
+});
 
 // Animations
 
@@ -179,4 +192,19 @@ export const angryAnimation = (gender: Gender): Animation => {
     },
   ];
   return [...cycle, ...cycle, ...cycle];
+};
+
+export const washAnimation = (currentFrame: AnimationFrame): Animation => {
+  const washFrame: AnimationFrame = {
+    sprites: [
+      ...currentFrame.sprites,
+      { sprite: wave, frame: [0, 0], x: 32, y: 0 },
+    ],
+  };
+  return [
+    translateAnimationFrame(washFrame, -6),
+    translateAnimationFrame(washFrame, -14),
+    translateAnimationFrame(washFrame, -23),
+    translateAnimationFrame(washFrame, -32),
+  ];
 };

@@ -70,6 +70,7 @@ export const useAnimationLoop = (
   pauseLoop: boolean
 ) => {
   const animationQueue = useRef<Animation>([...loopingAnimation]);
+  const currentFrame = useRef<AnimationFrame>();
 
   const setAnimation = useCallback((animation: Animation) => {
     animationQueue.current = [...animation];
@@ -85,6 +86,7 @@ export const useAnimationLoop = (
           setAnimation(loopingAnimation);
         }
         const frame = animationQueue.current.shift();
+        currentFrame.current = frame;
         if (frame) {
           await drawFrame(ctx, frame, lightsOff);
           await delay(frame.ms ?? defaultFrameDurationMs);
@@ -99,5 +101,5 @@ export const useAnimationLoop = (
     };
   }, [loopingAnimation, setAnimation, setBusy, ctx, lightsOff, pauseLoop]);
 
-  return { setAnimation };
+  return { setAnimation, currentFrame };
 };
