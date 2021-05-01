@@ -13,11 +13,11 @@ const delay = (ms: number) => {
   });
 };
 
-export const clear = (ctx: CanvasRenderingContext2D) =>
-  ctx.clearRect(0, 0, 544, 272);
+export const clear = (ctx: CanvasRenderingContext2D | null) =>
+  ctx?.clearRect(0, 0, 544, 272);
 
-export const fill = (ctx: CanvasRenderingContext2D) =>
-  ctx.fillRect(0, 0, 544, 272);
+export const fill = (ctx: CanvasRenderingContext2D | null) =>
+  ctx?.fillRect(0, 0, 544, 272);
 
 export function drawFrame(
   ctx: CanvasRenderingContext2D | null,

@@ -29,9 +29,11 @@ const foodSelection = new Sprite(foodSelectionSprite, 32, 16, 1, 1);
 export type FoodOption = "meal" | "snack";
 export type Gender = "boy" | "girl";
 
+const getBabySprite = (gender: Gender) => (gender === "girl" ? girl : boy);
+
 export const foodAnimation = (gender: Gender, type: FoodOption): Animation => {
   const foodRow = type === "meal" ? 0 : 1;
-  const baby = gender === "girl" ? girl : boy;
+  const baby = getBabySprite(gender);
   const babyFrame = (open: boolean): FrameSprite => ({
     sprite: baby,
     frame: [open ? 3 : 1, 0],
@@ -64,7 +66,7 @@ export const foodAnimation = (gender: Gender, type: FoodOption): Animation => {
 };
 
 export const idleAnimation = (gender: Gender): Animation => {
-  const baby = gender === "girl" ? girl : boy;
+  const baby = getBabySprite(gender);
   return [
     { sprites: [{ sprite: baby, frame: [0, 0], x: 12, y: 8 }] },
     { sprites: [{ sprite: baby, frame: [0, 0], x: 10, y: 8 }] },
@@ -91,6 +93,18 @@ export const idleAnimation = (gender: Gender): Animation => {
 export const foodScreen = (type: FoodOption): AnimationFrame => ({
   sprites: [
     { sprite: foodSelection, frame: [0, 0], x: 0, y: 0 },
-    { sprite: icons, frame: [3, 1], x: 1, y: type === "meal" ? 0 : 8 },
+    { sprite: icons, frame: [3, 1], x: 1, y: type === "meal" ? 1 : 8 },
   ],
 });
+
+export const denyAnimation = (gender: Gender): Animation => {
+  const baby = getBabySprite(gender);
+  return [
+    { sprites: [{ sprite: baby, frame: [2, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [7, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [2, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [7, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [2, 0], x: 12, y: 8 }] },
+    { sprites: [{ sprite: baby, frame: [7, 0], x: 12, y: 8 }] },
+  ];
+};

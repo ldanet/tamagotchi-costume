@@ -20,6 +20,7 @@ import {
   useAnimationLoop,
 } from "./animations/animate";
 import {
+  denyAnimation,
   foodAnimation,
   FoodOption,
   foodScreen,
@@ -106,17 +107,28 @@ function App() {
     if (busy) return;
     switch (mode) {
       case "idle": {
-        if (activeIcon === "food" && !lightsOff) {
-          setFoodOption("meal");
-          setMode("food");
-          setPauseLoop(true);
-          setAnimation([]);
-          drawFrame(ctx.current, foodScreen("meal"), lightsOff);
-        }
-        if (activeIcon === "light") {
-          if (!ctx.current) return;
-          lightsOff ? clear(ctx.current) : fill(ctx.current);
-          setlightsOff((current) => !current);
+        switch (activeIcon) {
+          case "food": {
+            if (!lightsOff) {
+              setFoodOption("meal");
+              setMode("food");
+              setPauseLoop(true);
+              setAnimation([]);
+              drawFrame(ctx.current, foodScreen("meal"), lightsOff);
+            }
+            break;
+          }
+          case "light": {
+            lightsOff ? clear(ctx.current) : fill(ctx.current);
+            setlightsOff((current) => !current);
+            break;
+          }
+          default: {
+            setPauseLoop(true);
+            setAnimation([]);
+            await animate(ctx.current, denyAnimation(gender));
+            setPauseLoop(false);
+          }
         }
         break;
       }
