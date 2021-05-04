@@ -21,7 +21,11 @@ import {
 } from "./animations/animate";
 import {
   angryAnimation,
+  deadAnimation,
   denyAnimation,
+  dyingAnimation,
+  eggHatchAnimation,
+  eggIdleAnimation,
   foodAnimation,
   FoodOption,
   foodScreen,
@@ -37,7 +41,7 @@ import {
   washAnimation,
 } from "./animations/animations";
 
-type Mode = "idle" | "food" | "game" | "status" | "egg" | "dead";
+type Mode = "idle" | "food" | "game" | "status" | "egg" | "dead" | "sleep";
 
 const options = [
   "food",
@@ -57,9 +61,19 @@ const maxGameRounds = 3;
 
 const directions = ["left", "right"] as const;
 
-const poopInterval = 8 * 60 * 1000;
-const hungerInterval = 2.5 * 60 * 1000;
-const happinessInterval = 2.5 * 60 * 1000;
+const minutes = (n: number) => n * 60 * 1000;
+
+const poopInterval = minutes(8);
+const hungerInterval = minutes(4);
+const happinessInterval = minutes(4);
+
+const missedCareDelay = minutes(3);
+
+const poopSickDelay = minutes(3);
+
+const deathDelay = minutes(5);
+
+const hatchDelay = 15 * 1000;
 
 const getRandomGender = (): Gender =>
   genders[Math.floor(Math.random() * 10) % 2];
@@ -70,25 +84,28 @@ function App() {
 
   // General
   const [busy, setBusy] = useState(false);
-  const [mode, setMode] = useState<Mode>("idle");
-  const [activeOption, setActiveOption] = useState<number>(-1);
+  const [mode, setMode] = useState<Mode>("egg");
+  const [activeOption, setActiveOption] = useState<number>(0);
 
-  const activeIcon = options[activeOption];
+  const isEggMode = mode === "egg";
+  const isLiveMode = mode !== "egg" && mode !== "dead" && mode !== "sleep";
+  const activeIcon = isLiveMode && options[activeOption];
 
   // Character
   const [gender, setGender] = useState<Gender>(getRandomGender());
-  const [isWaitingToPoop, setIsWaitingToPoop] = useState<boolean>(false);
-  const [hasPoop, setHasPoop] = useState<boolean>(false);
+  const [isWaitingToPoop, setIsWaitingToPoop] = useState(false);
+  const [hasPoop, setHasPoop] = useState(false);
+  const [isWaitingToDie, setIsWaitingToDie] = useState(false);
   const [hungryLevel, setHungryLevel] = useState<number>(0);
   const [happyLevel, setHappyLevel] = useState<number>(0);
-
-  const needsAttention = mode !== "egg" && (!hungryLevel || !happyLevel);
-
-  // Lights
-  const [lightsOff, setlightsOff] = useState(false);
+  const [needsAttention, setNeedsAttention] = useState(false);
+  const [sick, setSick] = useState(false);
 
   // Food
   const [foodOption, setFoodOption] = useState<FoodOption>("meal");
+
+  // Lights
+  const [lightsOff, setlightsOff] = useState(false);
 
   // Game
   const [gameRound, setGameRound] = useState<number>(1);
@@ -98,9 +115,7 @@ function App() {
   const [statusPage, setStatusPage] = useState<number>(0);
 
   // Animation
-  const [animationLoop, setAnimationLoop] = useState(
-    idleAnimation(gender, hasPoop)
-  );
+  const [animationLoop, setAnimationLoop] = useState(eggIdleAnimation(gender));
   const [pauseLoop, setPauseLoop] = useState(false);
 
   useEffect(() => {
@@ -111,37 +126,130 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => setIsWaitingToPoop(true), poopInterval);
+    let interval: NodeJS.Timeout;
+    if (isEggMode) {
+      interval = setTimeout(async () => {
+        setPauseLoop(true);
+        await animate(ctx.current, eggHatchAnimation(gender));
+        setMode("idle");
+        setPauseLoop(false);
+      }, hatchDelay);
+    }
+    return () => {
+      clearTimeout(interval);
+    };
+  }, [isEggMode, gender]);
+
+  // Poop
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLiveMode) {
+      interval = setInterval(() => setIsWaitingToPoop(true), poopInterval);
+    }
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [isLiveMode]);
 
   useEffect(() => {
-    const interval = setInterval(
-      () => setHungryLevel((lvl) => (lvl ? lvl - 1 : lvl)),
-      hungerInterval
-    );
+    let interval: NodeJS.Timeout;
+    if (isLiveMode) {
+      interval = setInterval(
+        () => setHungryLevel((lvl) => (lvl ? lvl - 1 : lvl)),
+        hungerInterval
+      );
+    }
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [isLiveMode]);
 
   useEffect(() => {
-    const interval = setInterval(
-      () => setHappyLevel((lvl) => (lvl ? lvl - 1 : lvl)),
-      happinessInterval
-    );
+    let interval: NodeJS.Timeout;
+    if (isLiveMode) {
+      interval = setInterval(
+        () => setHappyLevel((lvl) => (lvl ? lvl - 1 : lvl)),
+        happinessInterval
+      );
+    }
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [isLiveMode]);
+
+  useEffect(() => {
+    if (happyLevel <= 0) {
+      setNeedsAttention(true);
+    }
+  }, [happyLevel]);
+
+  useEffect(() => {
+    if (hungryLevel <= 0) {
+      setNeedsAttention(true);
+    }
+  }, [hungryLevel]);
+
+  useEffect(() => {
+    if (hungryLevel > 0 && happyLevel > 0) {
+      setNeedsAttention(false);
+    }
+  }, [hungryLevel, happyLevel]);
+
+  // get sick if left uncared fo for too long
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (needsAttention && isLiveMode) {
+      timeout = setTimeout(() => {
+        setNeedsAttention(false);
+        setSick(true);
+      }, missedCareDelay);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [needsAttention, isLiveMode]);
+
+  // get sick if left with poop for too long
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (hasPoop && isLiveMode) {
+      timeout = setTimeout(() => {
+        setSick(true);
+      }, poopSickDelay);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [hasPoop, isLiveMode]);
+
+  // die if left sick for too long
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (sick && isLiveMode) {
+      timeout = setTimeout(() => {
+        setIsWaitingToDie(true);
+      }, deathDelay);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [sick, isLiveMode, gender]);
+
+  // die if left sick for too long
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (sick && isLiveMode) {
+      timeout = setTimeout(async () => {}, deathDelay);
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [sick, isLiveMode, gender]);
 
   const { setAnimation, currentFrame } = useAnimationLoop(
     ctx.current,
     animationLoop,
     lightsOff,
-    setBusy,
     pauseLoop
   );
 
@@ -162,8 +270,25 @@ function App() {
     }
   }, [gender, hasPoop, isWaitingToPoop, mode, busy, setAnimation]);
 
+  // Die when not busy
+  useEffect(() => {
+    const die = async () => {
+      setMode("dead");
+      setPauseLoop(true);
+      await animate(ctx.current, dyingAnimation(gender));
+      setPauseLoop(false);
+    };
+    if (isWaitingToDie && mode === "idle" && !busy) {
+      die();
+    }
+  }, [gender, isWaitingToDie, mode, busy, setAnimation]);
+
   // Choose relevant looping animation
   useEffect(() => {
+    if (mode === "egg") {
+      setAnimation([]);
+      setAnimationLoop(eggIdleAnimation(gender));
+    }
     if (mode === "idle") {
       setAnimation([]);
       setAnimationLoop(idleAnimation(gender, hasPoop));
@@ -171,6 +296,10 @@ function App() {
     if (mode === "game") {
       setAnimation([]);
       setAnimationLoop(gameWaitAnimation(gender, hasPoop));
+    }
+    if (mode === "dead") {
+      setAnimation([]);
+      setAnimationLoop(deadAnimation());
     }
   }, [gender, hasPoop, mode, setAnimation]);
 
@@ -203,6 +332,8 @@ function App() {
         if (gameWon) {
           await animate(ctx.current, happyAnimation(gender, hasPoop));
           setHappyLevel((lvl) => lvl + 1);
+        } else {
+          await animate(ctx.current, angryAnimation(gender, hasPoop));
         }
         setMode("idle");
       }
@@ -228,6 +359,40 @@ function App() {
     },
     [gender, hungryLevel, happyLevel, statusPage]
   );
+
+  const reset = useCallback(() => {
+    const newGender = getRandomGender();
+    // General
+    setBusy(false);
+    setMode("egg");
+    setActiveOption(0);
+
+    // Character
+    setGender(newGender);
+    setIsWaitingToPoop(false);
+    setHasPoop(false);
+    setIsWaitingToDie(false);
+    setHungryLevel(0);
+    setHappyLevel(0);
+    setNeedsAttention(false);
+    setSick(false);
+
+    // Food
+    setFoodOption("meal");
+
+    // Lights
+    setlightsOff(false);
+
+    // Game
+    setGameRound(1);
+
+    // Status
+    setStatusPage(0);
+
+    // Animation
+    setAnimationLoop(eggIdleAnimation(newGender));
+    setPauseLoop(false);
+  }, []);
 
   const handleA = useCallback(() => {
     if (busy) return;
@@ -288,6 +453,24 @@ function App() {
             setPauseLoop(false);
             break;
           }
+          case "medicine": {
+            setPauseLoop(true);
+            setAnimation([]);
+            setBusy(true);
+            if (!sick) {
+              await animate(ctx.current, denyAnimation(gender, hasPoop));
+            } else {
+              await animate(ctx.current, happyAnimation(gender, hasPoop));
+              setSick(false);
+              setHungryLevel((lvl) => lvl - 1);
+              setHappyLevel((lvl) => lvl - 1);
+            }
+
+            setBusy(false);
+            setPauseLoop(false);
+
+            break;
+          }
           case "bathroom": {
             if (currentFrame.current) {
               setPauseLoop(true);
@@ -295,6 +478,9 @@ function App() {
               setHasPoop(false);
               setBusy(true);
               await animate(ctx.current, washAnimation(currentFrame.current));
+              if (hasPoop) {
+                await animate(ctx.current, happyAnimation(gender, false));
+              }
               setBusy(false);
               setPauseLoop(false);
             }
@@ -342,9 +528,11 @@ function App() {
             lightsOff
           );
           if (foodOption === "meal") {
-            setHungryLevel(hungryLevel + 1);
+            setHungryLevel(Math.max(hungryLevel, 0) + 1);
           } else {
-            setHappyLevel((level) => Math.min(level + 1, maxNeedLevel));
+            setHappyLevel((level) =>
+              Math.min(Math.max(level, 0) + 1, maxNeedLevel)
+            );
           }
         } else {
           await animate(ctx.current, denyAnimation(gender, hasPoop));
@@ -376,14 +564,19 @@ function App() {
     happyLevel,
     hasPoop,
     guessDirection,
+    sick,
   ]);
 
   const handleC = useCallback(() => {
     if (busy || mode === "idle") return;
-    setAnimation([]);
-    setMode("idle");
-    setPauseLoop(false);
-  }, [busy, setAnimation, mode]);
+    if (mode === "dead") {
+      reset();
+    } else {
+      setAnimation([]);
+      setMode("idle");
+      setPauseLoop(false);
+    }
+  }, [busy, setAnimation, mode, reset]);
 
   return (
     <div className="App">
@@ -422,7 +615,7 @@ function App() {
             style={{ backgroundImage: `url("${disciplineIcon}")` }}
           />
           <div
-            className={`icon${needsAttention ? " active" : ""}`}
+            className={`icon${isLiveMode && needsAttention ? " active" : ""}`}
             style={{ backgroundImage: `url("${attentionIcon}")` }}
           />
         </div>

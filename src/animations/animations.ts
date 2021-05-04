@@ -2,19 +2,21 @@ import Sprite, { FrameSelection } from "./Sprite";
 import foodSprite from "./sprites/food.png";
 import girlSprite from "./sprites/girl.png";
 import boySprite from "./sprites/boy.png";
+import eggGirlSprite from "./sprites/eggGirl.png";
+import eggBoySprite from "./sprites/eggBoy.png";
 import iconsSprite from "./sprites/icons.png";
 import statusSprite from "./sprites/status.png";
 import foodSelectionSprite from "./sprites/foodSelection.png";
 import waveSprite from "./sprites/wave.png";
 import poopSprite from "./sprites/poop.png";
 import numbersSprite from "./sprites/numbers.png";
+import deathSprite from "./sprites/death.png";
 
 type FrameSprite = {
   sprite: Sprite;
   frame: FrameSelection;
   x: number;
   y: number;
-  mirror?: "horizontal" | "vertical";
 };
 
 export type AnimationFrame = {
@@ -25,19 +27,26 @@ export type AnimationFrame = {
 export type Animation = AnimationFrame[];
 
 const babyFrameMap = {
-  neutral: [0, 0] as FrameSelection,
-  flat: [1, 0] as FrameSelection,
-  left: [2, 0] as FrameSelection,
-  eat: [3, 0] as FrameSelection,
-  smile: [4, 0] as FrameSelection,
-  angry: [5, 0] as FrameSelection,
-  sleepy: [6, 0] as FrameSelection,
-  right: [7, 0] as FrameSelection,
-};
+  neutral: [0, 0],
+  flat: [1, 0],
+  left: [2, 0],
+  eat: [3, 0],
+  smile: [4, 0],
+  angry: [5, 0],
+  sleepy: [6, 0],
+  right: [7, 0],
+} as const;
 
 const food = new Sprite(foodSprite, 24, 16, 3, 2);
 const girl = new Sprite(girlSprite, 64, 8, 8, 1, babyFrameMap);
 const boy = new Sprite(boySprite, 64, 8, 8, 1, babyFrameMap);
+const girlEgg = new Sprite(eggGirlSprite, 48, 16, 3, 1);
+const boyEgg = new Sprite(eggBoySprite, 48, 16, 3, 1);
+const death = new Sprite(deathSprite, 48, 16, 3, 1, {
+  obake1: [0, 0],
+  obake2: [1, 0],
+  tomb: [2, 0],
+});
 const numbers = new Sprite(numbersSprite, 40, 16, 5, 2, {
   0: [0, 0],
   1: [1, 0],
@@ -74,8 +83,8 @@ const icons = new Sprite(iconsSprite, 32, 32, 4, 4, {
   scale: [2, 2],
   year: [3, 2],
   ounce: [0, 3],
-  pound: [1, 3],
-  gram: [2, 3],
+  angry1alt: [1, 3],
+  angry2alt: [2, 3],
   versus: [3, 3],
 });
 const foodSelection = new Sprite(foodSelectionSprite, 32, 16, 1, 1);
@@ -85,16 +94,19 @@ const poop = new Sprite(poopSprite, 9, 16, 1, 2);
 export type FoodOption = "meal" | "snack";
 export type Gender = "boy" | "girl";
 
+const getEggSprite = (gender: Gender) => (gender === "girl" ? girlEgg : boyEgg);
 const getBabySprite = (gender: Gender) => (gender === "girl" ? girl : boy);
 
 const translateAnimationFrame = (
   animationFrame: AnimationFrame,
-  translateX: number
+  translateX: number,
+  translateY: number = 0
 ): AnimationFrame => ({
   ...animationFrame,
   sprites: animationFrame.sprites.map((sprite) => ({
     ...sprite,
     x: sprite.x + translateX,
+    y: sprite.y + translateY,
   })),
 });
 
@@ -104,15 +116,39 @@ const poopSprites: FrameSprite[] = [
 ];
 
 const injectPoop = (frame: AnimationFrame, index: number): AnimationFrame => {
-  const poopIndex = Math.floor((index % 4) / 2);
-  console.log("poopIndex: ", poopIndex);
+  const poopIndex = Math.floor((index % 6) / 3);
   return {
     ...frame,
     sprites: [...frame.sprites, poopSprites[poopIndex]],
   };
 };
 
-// Animations
+// Animation
+
+export const eggIdleAnimation = (gender: Gender): Animation => {
+  const egg = getEggSprite(gender);
+  return [
+    { sprites: [{ sprite: egg, frame: [0, 0], x: 8, y: 0 }] },
+    { sprites: [{ sprite: egg, frame: [1, 0], x: 8, y: 0 }] },
+  ];
+};
+
+export const eggHatchAnimation = (gender: Gender): Animation => {
+  const egg = getEggSprite(gender);
+  const cycle: Animation = [
+    { sprites: [{ sprite: egg, frame: [1, 0], x: 8, y: 0 }] },
+    { sprites: [{ sprite: egg, frame: [1, 0], x: 9, y: 0 }] },
+  ];
+  return [
+    ...cycle,
+    ...cycle,
+    ...cycle,
+    {
+      ms: 4000,
+      sprites: [{ sprite: egg, frame: [2, 0], x: 8, y: 0 }],
+    },
+  ];
+};
 
 export const foodAnimation = (
   gender: Gender,
@@ -217,34 +253,44 @@ export const happyAnimation = (gender: Gender, hasPoop: boolean): Animation => {
     {
       sprites: [
         { sprite: baby, frame: [4, 0], x: 12, y: 8 },
-        { sprite: icons, frame: happy, x: 20, y: 8 },
+        { sprite: icons, frame: happy, x: hasPoop ? 4 : 20, y: 8 },
       ],
     },
   ];
   return [...cycle, ...cycle, ...cycle].map((frame, index) =>
-    hasPoop ? injectPoop(translateAnimationFrame(frame, -6), index) : frame
+    hasPoop ? injectPoop(frame, index) : frame
   );
 };
 
 export const angryAnimation = (gender: Gender, hasPoop: boolean): Animation => {
   const baby = getBabySprite(gender);
-  const { angry1, angry2 } = icons.sprite.frames;
+  const { angry1, angry2, angry1alt, angry2alt } = icons.sprite.frames;
   const cycle: Animation = [
     {
       sprites: [
         { sprite: baby, frame: [1, 0], x: 12, y: 8 },
-        { sprite: icons, frame: angry1, x: 20, y: 8 },
+        {
+          sprite: icons,
+          frame: hasPoop ? angry1alt : angry1,
+          x: hasPoop ? 4 : 20,
+          y: 8,
+        },
       ],
     },
     {
       sprites: [
         { sprite: baby, frame: [5, 0], x: 12, y: 8 },
-        { sprite: icons, frame: angry2, x: 20, y: 8 },
+        {
+          sprite: icons,
+          frame: hasPoop ? angry2alt : angry2,
+          x: hasPoop ? 4 : 20,
+          y: 8,
+        },
       ],
     },
   ];
   return [...cycle, ...cycle, ...cycle].map((frame, index) =>
-    hasPoop ? injectPoop(translateAnimationFrame(frame, -6), index) : frame
+    hasPoop ? injectPoop(frame, index) : frame
   );
 };
 
@@ -478,6 +524,47 @@ export const statusScreen = (
           x: 24,
           y: 8,
         },
+      ],
+    },
+  ];
+};
+
+export const dyingAnimation = (gender: Gender): Animation => {
+  const baby = getBabySprite(gender);
+  const { smile, neutral, flat, sleepy } = baby.sprite.frames;
+  const { obake2, tomb } = death.sprite.frames;
+  const lastFrame = {
+    sprites: [
+      { sprite: baby, frame: sleepy, x: 12, y: 8 },
+      { sprite: death, frame: obake2, x: 0, y: -16 },
+      { sprite: death, frame: tomb, x: 16, y: -16 },
+    ],
+  };
+  return [
+    { ms: 1000, sprites: [{ sprite: baby, frame: smile, x: 12, y: 8 }] },
+    { ms: 1000, sprites: [{ sprite: baby, frame: neutral, x: 12, y: 8 }] },
+    { ms: 1000, sprites: [{ sprite: baby, frame: flat, x: 12, y: 8 }] },
+    { ms: 1500, ...lastFrame },
+    translateAnimationFrame(lastFrame, 0, 4),
+    translateAnimationFrame(lastFrame, 0, 8),
+    translateAnimationFrame(lastFrame, 0, 12),
+    translateAnimationFrame(lastFrame, 0, 16),
+  ];
+};
+
+export const deadAnimation = (): Animation => {
+  const { obake1, obake2, tomb } = death.sprite.frames;
+  return [
+    {
+      sprites: [
+        { sprite: death, frame: obake1, x: 0, y: 0 },
+        { sprite: death, frame: tomb, x: 16, y: 0 },
+      ],
+    },
+    {
+      sprites: [
+        { sprite: death, frame: obake2, x: 0, y: 0 },
+        { sprite: death, frame: tomb, x: 16, y: 0 },
       ],
     },
   ];

@@ -66,7 +66,6 @@ export const useAnimationLoop = (
   ctx: CanvasRenderingContext2D | null,
   loopingAnimation: Animation,
   lightsOff: boolean,
-  setBusy: (busy: boolean) => void,
   pauseLoop: boolean
 ) => {
   const animationQueue = useRef<Animation>([...loopingAnimation]);
@@ -82,7 +81,6 @@ export const useAnimationLoop = (
     async function loop() {
       while (!pauseLoop && run && ctx) {
         if (!animationQueue.current.length) {
-          setBusy(false);
           setAnimation(loopingAnimation);
         }
         const frame = animationQueue.current.shift();
@@ -99,7 +97,7 @@ export const useAnimationLoop = (
     return () => {
       run = false;
     };
-  }, [loopingAnimation, setAnimation, setBusy, ctx, lightsOff, pauseLoop]);
+  }, [loopingAnimation, setAnimation, ctx, lightsOff, pauseLoop]);
 
   return { setAnimation, currentFrame };
 };

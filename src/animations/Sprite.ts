@@ -1,6 +1,6 @@
 export type FrameCoordinates = { x: number; y: number };
 
-export type FrameSelection = [number, number];
+export type FrameSelection = readonly [number, number];
 
 class Sprite<FrameMap extends { [key: string]: FrameSelection } = {}> {
   sprite: {
