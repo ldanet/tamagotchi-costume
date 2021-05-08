@@ -110,6 +110,21 @@ const translateAnimationFrame = (
   })),
 });
 
+const sickFrameSprite: FrameSprite = {
+  sprite: icons,
+  frame: icons.sprite.frames.sick,
+  x: 24,
+  y: 0,
+};
+
+const injectSick = (frame: AnimationFrame, index: number): AnimationFrame => {
+  const showSick = !Math.floor(((index + 1) % 6) / 3);
+  return {
+    ...frame,
+    sprites: showSick ? [...frame.sprites, sickFrameSprite] : frame.sprites,
+  };
+};
+
 const poopSprites: FrameSprite[] = [
   { sprite: poop, frame: [0, 0], x: 23, y: 8 },
   { sprite: poop, frame: [0, 1], x: 23, y: 8 },
@@ -121,6 +136,26 @@ const injectPoop = (frame: AnimationFrame, index: number): AnimationFrame => {
     ...frame,
     sprites: [...frame.sprites, poopSprites[poopIndex]],
   };
+};
+
+const injectStatus = (
+  animation: Animation,
+  hasPoop: boolean,
+  isSick?: boolean,
+  translateX: number = 0
+) => {
+  if (!hasPoop && !isSick) return animation;
+  let result = [...animation];
+  if (translateX) {
+    result = result.map((frame) => translateAnimationFrame(frame, translateX));
+  }
+  if (hasPoop) {
+    result = result.map((frame, index) => injectPoop(frame, index));
+  }
+  if (isSick) {
+    result = result.map((frame, index) => injectSick(frame, index));
+  }
+  return result;
 };
 
 // Animation
@@ -153,7 +188,8 @@ export const eggHatchAnimation = (gender: Gender): Animation => {
 export const foodAnimation = (
   gender: Gender,
   type: FoodOption,
-  hasPoop: boolean
+  hasPoop: boolean,
+  isSick: boolean
 ): Animation => {
   const foodRow = type === "meal" ? 0 : 1;
   const baby = getBabySprite(gender);
@@ -171,54 +207,65 @@ export const foodAnimation = (
     x: 3,
     y: 8,
   });
-  return [
-    {
-      sprites: [
-        { sprite: food, frame: [0, foodRow], x: 3, y: 0 } as FrameSprite,
-        babyFrame(eat),
-      ],
-    },
-    { sprites: [foodFrame(0), babyFrame(eat)] },
-    { sprites: [foodFrame(1), babyFrame(flat)] },
-    { sprites: [foodFrame(1), babyFrame(eat)] },
-    { sprites: [foodFrame(2), babyFrame(flat)] },
-    { sprites: [foodFrame(2), babyFrame(eat)] },
-    { sprites: [babyFrame(flat)] },
-    { sprites: [babyFrame(eat)] },
-    { sprites: [babyFrame(flat)] },
-  ].map((frame, index) => (hasPoop ? injectPoop(frame, index + 1) : frame));
+  return injectStatus(
+    [
+      {
+        sprites: [
+          { sprite: food, frame: [0, foodRow], x: 3, y: 0 } as FrameSprite,
+          babyFrame(eat),
+        ],
+      },
+      { sprites: [foodFrame(0), babyFrame(eat)] },
+      { sprites: [foodFrame(1), babyFrame(flat)] },
+      { sprites: [foodFrame(1), babyFrame(eat)] },
+      { sprites: [foodFrame(2), babyFrame(flat)] },
+      { sprites: [foodFrame(2), babyFrame(eat)] },
+      { sprites: [babyFrame(flat)] },
+      { sprites: [babyFrame(eat)] },
+      { sprites: [babyFrame(flat)] },
+    ],
+    hasPoop,
+    isSick
+  );
 };
 
-export const idleAnimation = (gender: Gender, hasPoop: boolean): Animation => {
+export const idleAnimation = (
+  gender: Gender,
+  hasPoop: boolean,
+  isSick: boolean
+): Animation => {
   const baby = getBabySprite(gender);
   const { flat, neutral } = baby.sprite.frames;
   const animationFrame = (
     frame: FrameSelection,
     x: number
   ): AnimationFrame => ({ sprites: [{ sprite: baby, frame, x, y: 8 }] });
-  return [
-    animationFrame(neutral, 12),
-    animationFrame(neutral, 10),
-    animationFrame(flat, 8),
-    animationFrame(neutral, 6),
-    animationFrame(neutral, 8),
-    animationFrame(neutral, 10),
-    animationFrame(flat, 12),
-    animationFrame(flat, 14),
-    animationFrame(neutral, 12),
-    animationFrame(neutral, 10),
-    animationFrame(flat, 12),
-    animationFrame(flat, 14),
-    animationFrame(neutral, 14),
-    animationFrame(neutral, 16),
-    animationFrame(flat, 12),
-    animationFrame(flat, 10),
-    animationFrame(neutral, 8),
-    animationFrame(neutral, 6),
-    animationFrame(flat, 8),
-    animationFrame(flat, 10),
-  ].map((frame, index) =>
-    hasPoop ? injectPoop(translateAnimationFrame(frame, -2), index) : frame
+  return injectStatus(
+    [
+      animationFrame(neutral, 12),
+      animationFrame(neutral, 10),
+      animationFrame(flat, 8),
+      animationFrame(neutral, 6),
+      animationFrame(neutral, 8),
+      animationFrame(neutral, 10),
+      animationFrame(flat, 12),
+      animationFrame(flat, 14),
+      animationFrame(neutral, 12),
+      animationFrame(neutral, 10),
+      animationFrame(flat, 12),
+      animationFrame(flat, 14),
+      animationFrame(neutral, 14),
+      animationFrame(neutral, 16),
+      animationFrame(flat, 12),
+      animationFrame(flat, 10),
+      animationFrame(neutral, 8),
+      animationFrame(neutral, 6),
+      animationFrame(flat, 8),
+      animationFrame(flat, 10),
+    ],
+    hasPoop,
+    isSick,
+    -2
   );
 };
 
@@ -234,18 +281,24 @@ export const foodScreen = (type: FoodOption): AnimationFrame => ({
   ],
 });
 
-export const denyAnimation = (gender: Gender, hasPoop: boolean): Animation => {
+export const denyAnimation = (
+  gender: Gender,
+  hasPoop: boolean,
+  isSick: boolean
+): Animation => {
   const baby = getBabySprite(gender);
   const cycle: Animation = [
     { sprites: [{ sprite: baby, frame: [2, 0], x: 12, y: 8 }] },
     { sprites: [{ sprite: baby, frame: [7, 0], x: 12, y: 8 }] },
   ];
-  return [...cycle, ...cycle, ...cycle].map((frame, index) =>
-    hasPoop ? injectPoop(frame, index) : frame
-  );
+  return injectStatus([...cycle, ...cycle, ...cycle], hasPoop, isSick);
 };
 
-export const happyAnimation = (gender: Gender, hasPoop: boolean): Animation => {
+export const happyAnimation = (
+  gender: Gender,
+  hasPoop: boolean,
+  isSick: boolean
+): Animation => {
   const baby = getBabySprite(gender);
   const { happy } = icons.sprite.frames;
   const cycle: Animation = [
@@ -257,12 +310,14 @@ export const happyAnimation = (gender: Gender, hasPoop: boolean): Animation => {
       ],
     },
   ];
-  return [...cycle, ...cycle, ...cycle].map((frame, index) =>
-    hasPoop ? injectPoop(frame, index) : frame
-  );
+  return injectStatus([...cycle, ...cycle, ...cycle], hasPoop, isSick);
 };
 
-export const angryAnimation = (gender: Gender, hasPoop: boolean): Animation => {
+export const angryAnimation = (
+  gender: Gender,
+  hasPoop: boolean,
+  isSick: boolean
+): Animation => {
   const baby = getBabySprite(gender);
   const { angry1, angry2, angry1alt, angry2alt } = icons.sprite.frames;
   const cycle: Animation = [
@@ -289,14 +344,13 @@ export const angryAnimation = (gender: Gender, hasPoop: boolean): Animation => {
       ],
     },
   ];
-  return [...cycle, ...cycle, ...cycle].map((frame, index) =>
-    hasPoop ? injectPoop(frame, index) : frame
-  );
+  return injectStatus([...cycle, ...cycle, ...cycle], hasPoop, isSick);
 };
 
 export const gameStartAnimation = (
   gender: Gender,
-  hasPoop: boolean
+  hasPoop: boolean,
+  isSick: boolean
 ): Animation => {
   const baby = getBabySprite(gender);
   const { neutral } = baby.sprite.frames;
@@ -309,6 +363,7 @@ export const gameStartAnimation = (
       { sprite: icons, frame: fullHeart, x: 40, y: 0 },
       { sprite: icons, frame: fullHeart, x: 56, y: 0 },
       ...(hasPoop ? [poopSprites[1]] : []),
+      ...(isSick ? [sickFrameSprite] : []),
     ],
   };
   return [
@@ -321,7 +376,11 @@ export const gameStartAnimation = (
   ];
 };
 
-export const gameWaitAnimation = (gender: Gender, hasPoop: boolean) => {
+export const gameWaitAnimation = (
+  gender: Gender,
+  hasPoop: boolean,
+  isSick: boolean
+) => {
   const baby = getBabySprite(gender);
   const { neutral, smile } = baby.sprite.frames;
   const cycle: Animation = [
@@ -332,9 +391,7 @@ export const gameWaitAnimation = (gender: Gender, hasPoop: boolean) => {
       sprites: [{ sprite: baby, frame: smile, x: 12, y: 8 }],
     },
   ];
-  return [...cycle, ...cycle].map((frame, index) =>
-    hasPoop ? injectPoop(frame, index) : frame
-  );
+  return injectStatus([...cycle, ...cycle], hasPoop, isSick);
 };
 
 export const gameActionAnimation = (

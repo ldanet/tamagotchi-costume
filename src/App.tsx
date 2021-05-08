@@ -65,7 +65,7 @@ const minutes = (n: number) => n * 60 * 1000;
 
 const poopInterval = minutes(8);
 const hungerInterval = minutes(4);
-const happinessInterval = minutes(4);
+const happinessInterval = minutes(5);
 
 const missedCareDelay = minutes(3);
 
@@ -291,17 +291,17 @@ function App() {
     }
     if (mode === "idle") {
       setAnimation([]);
-      setAnimationLoop(idleAnimation(gender, hasPoop));
+      setAnimationLoop(idleAnimation(gender, hasPoop, sick));
     }
     if (mode === "game") {
       setAnimation([]);
-      setAnimationLoop(gameWaitAnimation(gender, hasPoop));
+      setAnimationLoop(gameWaitAnimation(gender, hasPoop, sick));
     }
     if (mode === "dead") {
       setAnimation([]);
       setAnimationLoop(deadAnimation());
     }
-  }, [gender, hasPoop, mode, setAnimation]);
+  }, [gender, hasPoop, mode, setAnimation, sick]);
 
   const guessDirection = useCallback(
     async (guess: "left" | "right") => {
@@ -314,10 +314,10 @@ function App() {
         gameActionAnimation(gender, guess, tamaFacing)
       );
       if (isWin) {
-        await animate(ctx.current, happyAnimation(gender, hasPoop));
+        await animate(ctx.current, happyAnimation(gender, hasPoop, sick));
         gameScore.current++;
       } else {
-        await animate(ctx.current, angryAnimation(gender, hasPoop));
+        await animate(ctx.current, angryAnimation(gender, hasPoop, sick));
       }
       if (gameRound >= maxGameRounds) {
         const gameWon = gameScore.current > maxGameRounds / 2;
@@ -330,10 +330,10 @@ function App() {
           )
         );
         if (gameWon) {
-          await animate(ctx.current, happyAnimation(gender, hasPoop));
+          await animate(ctx.current, happyAnimation(gender, hasPoop, sick));
           setHappyLevel((lvl) => lvl + 1);
         } else {
-          await animate(ctx.current, angryAnimation(gender, hasPoop));
+          await animate(ctx.current, angryAnimation(gender, hasPoop, sick));
         }
         setMode("idle");
       }
@@ -341,7 +341,7 @@ function App() {
       setBusy(false);
       setPauseLoop(false);
     },
-    [gender, hasPoop, gameRound, gameScore]
+    [gender, hasPoop, gameRound, gameScore, sick]
   );
 
   const turnStatusPage = useCallback(
@@ -450,7 +450,7 @@ function App() {
             setBusy(true);
             await animate(
               ctx.current,
-              gameStartAnimation(gender, hasPoop),
+              gameStartAnimation(gender, hasPoop, sick),
               lightsOff
             );
             setBusy(false);
@@ -462,9 +462,12 @@ function App() {
             setAnimation([]);
             setBusy(true);
             if (!sick) {
-              await animate(ctx.current, denyAnimation(gender, hasPoop));
+              await animate(ctx.current, denyAnimation(gender, hasPoop, sick));
             } else {
-              await animate(ctx.current, happyAnimation(gender, hasPoop));
+              await animate(
+                ctx.current,
+                happyAnimation(gender, hasPoop, false)
+              );
               setSick(false);
               setHungryLevel((lvl) => lvl - 1);
               setHappyLevel((lvl) => lvl - 1);
@@ -483,7 +486,7 @@ function App() {
               setBusy(true);
               await animate(ctx.current, washAnimation(currentFrame.current));
               if (hasPoop) {
-                await animate(ctx.current, happyAnimation(gender, false));
+                await animate(ctx.current, happyAnimation(gender, false, sick));
               }
               setBusy(false);
               setPauseLoop(false);
@@ -505,7 +508,7 @@ function App() {
             setPauseLoop(true);
             setAnimation([]);
             setBusy(true);
-            await animate(ctx.current, angryAnimation(gender, hasPoop));
+            await animate(ctx.current, angryAnimation(gender, hasPoop, sick));
             setBusy(false);
             setPauseLoop(false);
             break;
@@ -515,7 +518,7 @@ function App() {
               setPauseLoop(true);
               setAnimation([]);
               setBusy(true);
-              await animate(ctx.current, denyAnimation(gender, hasPoop));
+              await animate(ctx.current, denyAnimation(gender, hasPoop, sick));
               setBusy(false);
               setPauseLoop(false);
             }
@@ -528,7 +531,7 @@ function App() {
         if (foodOption === "snack" || hungryLevel < maxNeedLevel) {
           await animate(
             ctx.current,
-            foodAnimation(gender, foodOption, hasPoop),
+            foodAnimation(gender, foodOption, hasPoop, sick),
             lightsOff
           );
           if (foodOption === "meal") {
@@ -539,7 +542,7 @@ function App() {
             );
           }
         } else {
-          await animate(ctx.current, denyAnimation(gender, hasPoop));
+          await animate(ctx.current, denyAnimation(gender, hasPoop, sick));
         }
         setBusy(false);
         drawFrame(ctx.current, foodScreen(foodOption), lightsOff);
