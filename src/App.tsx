@@ -448,7 +448,11 @@ function App() {
             setGameRound(1);
             gameScore.current = 0;
             setBusy(true);
-            await animate(ctx.current, gameStartAnimation(gender, hasPoop));
+            await animate(
+              ctx.current,
+              gameStartAnimation(gender, hasPoop),
+              lightsOff
+            );
             setBusy(false);
             setPauseLoop(false);
             break;

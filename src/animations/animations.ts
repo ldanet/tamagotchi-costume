@@ -144,7 +144,7 @@ export const eggHatchAnimation = (gender: Gender): Animation => {
     ...cycle,
     ...cycle,
     {
-      ms: 4000,
+      ms: 3000,
       sprites: [{ sprite: egg, frame: [2, 0], x: 8, y: 0 }],
     },
   ];

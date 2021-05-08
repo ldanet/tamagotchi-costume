@@ -38,11 +38,12 @@
 }
 
 .controls {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  height: 70px;
 }
 
-.controls > * {
-  width: 25%;
+#c {
+  grid-column-start: 4;
 }
