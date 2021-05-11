@@ -38,10 +38,12 @@
 }
 
 .controls {
+  max-width: 570px;
+  margin: auto;
   margin-top: 20px;
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  height: 70px;
+  height: 100px;
 }
 
 #c {
