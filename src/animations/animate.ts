@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
 import { Animation, AnimationFrame } from "./animations";
+import Sprite from "./Sprite";
+import gridImage from "./sprites/grid-overlay.png";
+
+const grid = new Sprite(gridImage, 544, 272, 1, 1).get(0, 0).image;
 
 const pixelSize = 17;
 
@@ -44,6 +48,7 @@ export function drawFrame(
           frameHeight * pixelSize
         );
       });
+      ctx.drawImage(grid, 0, 0);
       resolve();
     });
   });

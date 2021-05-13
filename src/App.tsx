@@ -9,8 +9,6 @@ import statusIcon from "./icons/status.png";
 import disciplineIcon from "./icons/discipline.png";
 import attentionIcon from "./icons/attention.png";
 
-import gridOverlay from "./grid-overlay.png";
-
 import "./App.css";
 import {
   animate,
@@ -607,7 +605,6 @@ function App() {
           />
         </div>
         <canvas ref={canvas} width={544} height={272} />
-        <img className="grid-overlay" src={gridOverlay} alt="" />
         <div className="icon-bar icons-bottom">
           <div
             className={`icon${activeIcon === "bathroom" ? " active" : ""}`}

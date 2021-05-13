@@ -27,16 +27,6 @@
   opacity: 1;
 }
 
-.grid-overlay {
-  position: absolute;
-  width: 544px;
-  height: 272px;
-  top: 136px;
-  bottom: 136px;
-  left: 0;
-  right: 0;
-}
-
 .controls {
   max-width: 570px;
   margin: auto;
