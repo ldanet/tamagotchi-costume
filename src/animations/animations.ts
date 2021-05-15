@@ -10,7 +10,7 @@ import foodSelectionSprite from "./sprites/foodSelection.png";
 import waveSprite from "./sprites/wave.png";
 import poopSprite from "./sprites/poop.png";
 import numbersSprite from "./sprites/numbers.png";
-import deathSprite from "./sprites/death.png";
+import deathSprite from "./sprites/angel.png";
 
 type FrameSprite = {
   sprite: Sprite;
@@ -593,8 +593,8 @@ export const dyingAnimation = (gender: Gender): Animation => {
   const lastFrame = {
     sprites: [
       { sprite: baby, frame: sleepy, x: 12, y: 8 },
-      { sprite: death, frame: obake2, x: 0, y: -16 },
-      { sprite: death, frame: tomb, x: 16, y: -16 },
+      { sprite: death, frame: obake2, x: 0, y: 32 },
+      { sprite: death, frame: tomb, x: 16, y: 32 },
     ],
   };
   return [
@@ -602,10 +602,14 @@ export const dyingAnimation = (gender: Gender): Animation => {
     { ms: 1000, sprites: [{ sprite: baby, frame: neutral, x: 12, y: 8 }] },
     { ms: 1000, sprites: [{ sprite: baby, frame: flat, x: 12, y: 8 }] },
     { ms: 1500, ...lastFrame },
-    translateAnimationFrame(lastFrame, 0, 4),
-    translateAnimationFrame(lastFrame, 0, 8),
-    translateAnimationFrame(lastFrame, 0, 12),
-    translateAnimationFrame(lastFrame, 0, 16),
+    translateAnimationFrame(lastFrame, 0, -4),
+    translateAnimationFrame(lastFrame, 0, -8),
+    translateAnimationFrame(lastFrame, 0, -12),
+    translateAnimationFrame(lastFrame, 0, -16),
+    translateAnimationFrame(lastFrame, 0, -20),
+    translateAnimationFrame(lastFrame, 0, -24),
+    translateAnimationFrame(lastFrame, 0, -28),
+    translateAnimationFrame(lastFrame, 0, -32),
   ];
 };
 
