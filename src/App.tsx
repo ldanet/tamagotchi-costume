@@ -233,17 +233,6 @@ function App() {
     }
   }, [sick, isLiveMode, gender]);
 
-  // die if left sick for too long
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    if (sick && isLiveMode) {
-      timeout = setTimeout(async () => {}, deathDelay);
-      return () => {
-        clearTimeout(timeout);
-      };
-    }
-  }, [sick, isLiveMode, gender]);
-
   const { setAnimation, currentFrame } = useAnimationLoop(
     ctx.current,
     animationLoop,
@@ -263,10 +252,24 @@ function App() {
       setBusy(false);
       setPauseLoop(false);
     };
-    if (!hasPoop && isWaitingToPoop && mode === "idle" && !busy) {
+    if (
+      !hasPoop &&
+      !isWaitingToDie &&
+      isWaitingToPoop &&
+      mode === "idle" &&
+      !busy
+    ) {
       poop();
     }
-  }, [gender, hasPoop, isWaitingToPoop, mode, busy, setAnimation]);
+  }, [
+    gender,
+    hasPoop,
+    isWaitingToPoop,
+    mode,
+    busy,
+    setAnimation,
+    isWaitingToDie,
+  ]);
 
   // Die when not busy
   useEffect(() => {
