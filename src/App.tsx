@@ -576,7 +576,7 @@ function App() {
   ]);
 
   const handleC = useCallback(() => {
-    if (busy || mode === "idle") return;
+    if (busy || mode === "idle" || mode === "egg") return;
     if (mode === "dead") {
       reset();
     } else {
