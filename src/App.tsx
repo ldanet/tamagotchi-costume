@@ -586,6 +586,19 @@ function App() {
     }
   }, [busy, setAnimation, mode, reset]);
 
+  const handlePgUpDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "PageUp" || e.key === "PageDown") {
+      window.location.reload();
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("keyup", handlePgUpDown);
+    return () => {
+      window.removeEventListener("keyup", handlePgUpDown);
+    };
+  });
+
   return (
     <div className="App">
       <div className="screen">
