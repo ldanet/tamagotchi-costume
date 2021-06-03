@@ -1,4 +1,33 @@
-# Getting Started with Create React App
+# Tamagotchi costume
+
+This is a tamagotchi app made to run in Firefox on my inkBook e-reader, to be put inside a Tamagotchi cardboard costume with functioning buttons.
+I don't own a tamagotchi so the behaviour and animations are based off descriptions and videos I could find, and some of them are made up.
+
+## Features
+- Quick egg hatching
+- Gets more and more hungry and unhappy over time
+- Poops
+- Gets sick when left with no hunger or happy hearts left or poop for too long
+- Dies when left sick for too long
+- Feeding meal/snack with a selection menu
+- Turning light on/off without the selection menu
+- Guessing left or right game like the original Gen 1 Tamagotchi but only 3 rounds
+- Medicine heals the tamagotchi when it's sick
+- Cleaning washes the poop away
+- Status menu with all the screens present in Gen 1 Tamagotchi
+- Attention indicator when there are no hearts of hunger or happiness left
+
+## Operation
+- A button changes the selection / guesses left in the guessing game
+- B button confirms the selection / guesses right in the guessing game
+- C button cancels / restarts a new egg when the tamagotchi is dead
+
+## Limitations
+- The e-reader can only animate 2 frames per second
+- The animations are not interruptible, so you have to wait until the tamagotci has finished before pressing buttons
+- The tamagotchi doesn't age, evolve or get fat
+- Discipline was not implemented
+
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
