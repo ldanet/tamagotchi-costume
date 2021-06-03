@@ -1,7 +1,11 @@
 # Tamagotchi costume
 
+http://tamago-lydie.netlify.com
+
 This is a tamagotchi app made to run in Firefox on my inkBook e-reader, to be put inside a Tamagotchi cardboard costume with functioning buttons.
 I don't own a tamagotchi so the behaviour and animations are based off descriptions and videos I could find, and some of them are made up.
+
+Sprite code copied and adapted from https://github.com/jcreighton/tamagotchi
 
 ## Features
 - Quick egg hatching
